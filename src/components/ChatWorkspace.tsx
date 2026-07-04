@@ -118,51 +118,51 @@ export default function ChatWorkspace({ activeOrg, initialMessages = [] }: ChatW
     {
       title: 'Growth Strategy',
       text: 'Draft high-leverage strategic growth initiatives for our team this quarter.',
-      icon: <TrendingUp size={14} className="text-blue-400" />
+      icon: <TrendingUp size={14} className="text-orange-600" />
     },
     {
       title: 'Marketing Audit',
       text: 'Design a marketing blueprint to optimize customer acquisition and scale ad spend.',
-      icon: <Target size={14} className="text-indigo-400" />
+      icon: <Target size={14} className="text-orange-600" />
     }
   ];
 
   return (
-    <div className="flex-1 flex flex-col h-screen bg-neutral-950 text-neutral-200 overflow-hidden relative">
-      {/* Top ambient lights */}
-      <div className="absolute top-0 right-1/4 w-80 h-80 rounded-full bg-blue-600/5 blur-3xl pointer-events-none" />
+    <div className="flex-1 flex flex-col h-screen bg-white text-neutral-800 overflow-hidden relative">
+      {/* Top ambient light */}
+      <div className="absolute top-0 right-1/4 w-80 h-80 rounded-full bg-orange-500/5 blur-3xl pointer-events-none" />
 
       {/* Workspace Header */}
-      <header className="h-16 border-b border-neutral-900 px-6 flex items-center justify-between bg-neutral-950/80 backdrop-blur-md relative z-10">
+      <header className="h-16 border-b border-neutral-100 px-6 flex items-center justify-between bg-white/80 backdrop-blur-md relative z-10">
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-          <h1 className="text-sm font-semibold text-neutral-300">
-            {activeOrg.name} <span className="text-neutral-500 font-normal">/ Business Assistant</span>
+          <h1 className="text-sm font-semibold text-neutral-700">
+            {activeOrg.name} <span className="text-neutral-400 font-normal">/ Business Assistant</span>
           </h1>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-[10px] text-neutral-500 bg-neutral-900 border border-neutral-800 px-2 py-0.5 rounded-full font-mono uppercase">
+          <span className="text-[10px] text-neutral-500 bg-neutral-50 border border-neutral-200 px-2.5 py-0.5 rounded-full font-mono uppercase">
             Model: Gemini-3.5-Flash
           </span>
         </div>
       </header>
 
       {/* Main Messages Scrollable Window */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6 relative z-10">
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6 relative z-10 bg-neutral-50/20">
         {messages.length === 0 ? (
           /* Empty Workspace Welcome Greeting */
           <div className="max-w-2xl mx-auto pt-16 flex flex-col items-center text-center">
-            <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-600/10 to-indigo-600/10 border border-blue-500/20 flex items-center justify-center mb-6 shadow-xl relative group">
-              <Sparkles size={24} className="text-blue-400 animate-pulse" />
+            <div className="h-14 w-14 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center mb-6 shadow-md relative group">
+              <Sparkles size={24} className="text-orange-600 animate-pulse" />
             </div>
 
-            <h2 className="text-3xl font-bold tracking-tight text-neutral-100 mb-2">
+            <h2 className="text-3xl font-bold tracking-tight text-neutral-800 mb-2">
               {getGreeting()}
             </h2>
-            <p className="text-neutral-400 text-sm mb-1">
+            <p className="text-neutral-500 text-sm mb-1 font-medium">
               Welcome to the **{activeOrg.name}** Business Workspace
             </p>
-            <p className="text-neutral-500 text-xs mb-8">
+            <p className="text-neutral-400 text-xs mb-8">
               How can I assist your business growth and executive operations today?
             </p>
 
@@ -172,15 +172,15 @@ export default function ChatWorkspace({ activeOrg, initialMessages = [] }: ChatW
                 <button
                   key={idx}
                   onClick={() => handleSend(sug.text)}
-                  className="p-4 rounded-xl border border-neutral-900 bg-neutral-900/30 hover:bg-neutral-900/60 hover:border-neutral-800 transition-all text-left group"
+                  className="p-4 rounded-xl border border-neutral-200 bg-white hover:bg-neutral-50 hover:border-neutral-300 transition-all text-left group shadow-sm"
                 >
                   <div className="flex items-center gap-2 mb-1.5">
                     {sug.icon}
-                    <span className="text-xs font-semibold text-neutral-300 group-hover:text-blue-400 transition-colors">
+                    <span className="text-xs font-semibold text-neutral-700 group-hover:text-orange-600 transition-colors">
                       {sug.title}
                     </span>
                   </div>
-                  <p className="text-xs text-neutral-500 leading-relaxed truncate">
+                  <p className="text-xs text-neutral-400 leading-relaxed truncate">
                     {sug.text}
                   </p>
                 </button>
@@ -199,8 +199,8 @@ export default function ChatWorkspace({ activeOrg, initialMessages = [] }: ChatW
                 >
                   {/* Avatar Icon */}
                   {!isUser && (
-                    <div className="h-8 w-8 rounded-lg bg-blue-600/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                      <Cpu size={14} className="text-blue-400" />
+                    <div className="h-8 w-8 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center shrink-0">
+                      <Cpu size={14} className="text-orange-600" />
                     </div>
                   )}
 
@@ -208,8 +208,8 @@ export default function ChatWorkspace({ activeOrg, initialMessages = [] }: ChatW
                   <div
                     className={`max-w-[85%] rounded-2xl px-5 py-3.5 text-sm leading-relaxed border ${
                       isUser
-                        ? 'bg-neutral-900/80 border-neutral-800/60 text-neutral-100'
-                        : 'bg-neutral-900/35 border-neutral-900 text-neutral-300'
+                        ? 'bg-neutral-100 border-neutral-200/80 text-neutral-800'
+                        : 'bg-white border-neutral-200/60 text-neutral-700 shadow-sm'
                     }`}
                   >
                     {isUser ? (
@@ -220,8 +220,8 @@ export default function ChatWorkspace({ activeOrg, initialMessages = [] }: ChatW
                   </div>
 
                   {isUser && (
-                    <div className="h-8 w-8 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center shrink-0">
-                      <User size={14} className="text-neutral-400" />
+                    <div className="h-8 w-8 rounded-lg bg-white border border-neutral-200 flex items-center justify-center shrink-0 shadow-sm">
+                      <User size={14} className="text-neutral-500" />
                     </div>
                   )}
                 </div>
@@ -231,16 +231,16 @@ export default function ChatWorkspace({ activeOrg, initialMessages = [] }: ChatW
             {/* Special Loading State for Business Orchestrator */}
             {isLoading && (
               <div className="flex gap-4 justify-start">
-                <div className="h-8 w-8 rounded-lg bg-blue-600/15 border border-blue-500/30 flex items-center justify-center shrink-0">
-                  <Loader2 size={14} className="text-blue-400 animate-spin" />
+                <div className="h-8 w-8 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center shrink-0">
+                  <Loader2 size={14} className="text-orange-600 animate-spin" />
                 </div>
-                <div className="bg-neutral-900/30 border border-neutral-900 rounded-2xl px-5 py-3.5 max-w-[85%]">
+                <div className="bg-white border border-neutral-200/60 rounded-2xl px-5 py-3.5 max-w-[85%] shadow-sm">
                   <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-xs font-semibold text-blue-400 uppercase tracking-widest font-mono">
+                    <span className="text-xs font-bold text-orange-600 uppercase tracking-widest font-mono">
                       Business Orchestrator
                     </span>
                   </div>
-                  <span className="text-xs text-neutral-400 italic">
+                  <span className="text-xs text-neutral-500 italic">
                     {LOADING_STATUSES[statusIndex]}
                   </span>
                 </div>
@@ -252,7 +252,7 @@ export default function ChatWorkspace({ activeOrg, initialMessages = [] }: ChatW
       </div>
 
       {/* Sticky Bottom Form Panel */}
-      <footer className="p-6 border-t border-neutral-900 bg-neutral-950/90 backdrop-blur-md relative z-10">
+      <footer className="p-6 border-t border-neutral-100 bg-white/90 backdrop-blur-md relative z-10">
         <div className="max-w-3xl mx-auto">
           <form
             onSubmit={(e) => {
@@ -272,18 +272,18 @@ export default function ChatWorkspace({ activeOrg, initialMessages = [] }: ChatW
                 }
               }}
               placeholder="Query the executive assistant (e.g. Ask for strategy audit, growth KPIs, blueprints)..."
-              className="w-full rounded-2xl border border-neutral-800 bg-neutral-900/50 py-4 pl-4 pr-14 text-sm text-neutral-100 placeholder-neutral-500 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 resize-none max-h-32 custom-scrollbar transition-all"
+              className="w-full rounded-2xl border border-neutral-200 bg-white py-4 pl-4 pr-14 text-sm text-neutral-800 placeholder-neutral-400 outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 resize-none max-h-32 custom-scrollbar shadow-sm transition-all"
             />
             <button
               type="submit"
               disabled={isLoading || !input.trim()}
-              className="absolute right-3.5 top-3.5 flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 text-white hover:bg-blue-500 disabled:bg-neutral-900 disabled:text-neutral-600 transition-all shadow-[0_0_10px_rgba(59,130,246,0.15)] active:scale-95"
+              className="absolute right-3.5 top-3.5 flex h-8 w-8 items-center justify-center rounded-xl bg-orange-600 text-white hover:bg-orange-500 disabled:bg-neutral-50 disabled:text-neutral-300 transition-all shadow-[0_2px_10px_rgba(234,88,12,0.15)] active:scale-95"
             >
               <Send size={14} />
             </button>
           </form>
           <div className="flex items-center justify-center gap-1.5 mt-2">
-            <span className="text-[10px] text-neutral-600 text-center font-mono uppercase tracking-wider">
+            <span className="text-[10px] text-neutral-400 text-center font-mono uppercase tracking-wider">
               Savorit Business OS • Multi-Agent Interface Version 1
             </span>
           </div>
@@ -319,15 +319,15 @@ function MarkdownRenderer({ content }: { content: string }) {
   return (
     <ReactMarkdown
       components={{
-        h1: ({ children }) => <h3 className="text-base font-bold text-neutral-100 mt-4 mb-2 first:mt-0">{children}</h3>,
-        h2: ({ children }) => <h4 className="text-sm font-bold text-neutral-200 mt-4 mb-2 first:mt-0">{children}</h4>,
-        h3: ({ children }) => <h5 className="text-xs font-bold text-neutral-300 mt-3 mb-1">{children}</h5>,
-        p: ({ children }) => <p className="mb-3 last:mb-0 text-neutral-300">{children}</p>,
-        ul: ({ children }) => <ul className="list-disc pl-5 mb-3 space-y-1 text-neutral-300">{children}</ul>,
-        ol: ({ children }) => <ol className="list-decimal pl-5 mb-3 space-y-1 text-neutral-300">{children}</ol>,
+        h1: ({ children }) => <h3 className="text-base font-bold text-neutral-800 mt-4 mb-2 first:mt-0">{children}</h3>,
+        h2: ({ children }) => <h4 className="text-sm font-bold text-neutral-800 mt-4 mb-2 first:mt-0">{children}</h4>,
+        h3: ({ children }) => <h5 className="text-xs font-bold text-neutral-800 mt-3 mb-1">{children}</h5>,
+        p: ({ children }) => <p className="mb-3 last:mb-0 text-neutral-700 leading-relaxed">{children}</p>,
+        ul: ({ children }) => <ul className="list-disc pl-5 mb-3 space-y-1 text-neutral-700">{children}</ul>,
+        ol: ({ children }) => <ol className="list-decimal pl-5 mb-3 space-y-1 text-neutral-700">{children}</ol>,
         li: ({ children }) => <li className="text-xs">{children}</li>,
         blockquote: ({ children }) => (
-          <blockquote className="border-l-2 border-blue-500 pl-4 py-1 italic bg-neutral-950/20 my-3 text-neutral-400 rounded-r-lg">
+          <blockquote className="border-l-2 border-orange-500 pl-4 py-1 italic bg-orange-50/20 my-3 text-neutral-600 rounded-r-lg">
             {children}
           </blockquote>
         ),
@@ -337,9 +337,10 @@ function MarkdownRenderer({ content }: { content: string }) {
           const isInline = !match && !content.includes('\n' + String(children));
           
           if (!isInline) {
+            // Keep code blocks dark for a high-contrast developer workspace aesthetic
             return (
               <code 
-                className={`${className || ''} block bg-neutral-950 p-4 rounded-xl border border-neutral-800/80 my-4 overflow-x-auto text-xs font-mono text-neutral-300 shadow-inner whitespace-pre`}
+                className={`${className || ''} block bg-neutral-900 p-4 rounded-xl border border-neutral-800/80 my-4 overflow-x-auto text-xs font-mono text-neutral-200 shadow-inner whitespace-pre`}
                 {...props}
               >
                 {children}
@@ -347,7 +348,7 @@ function MarkdownRenderer({ content }: { content: string }) {
             );
           }
           return (
-            <code className="bg-neutral-900/80 text-blue-300 px-1.5 py-0.5 rounded font-mono text-xs border border-neutral-800/40" {...props}>
+            <code className="bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded font-mono text-xs border border-orange-100" {...props}>
               {children}
             </code>
           );
