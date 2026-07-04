@@ -1,0 +1,9 @@
+import { z } from 'zod';
+
+export const leadAgentOutputSchema = z.object({
+  leadScoreAvg: z.number(),
+  volumeMonthly: z.number(),
+  issues: z.array(z.string()),
+  recommendations: z.array(z.string()),
+  confidence: z.number()
+});
