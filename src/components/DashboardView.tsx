@@ -33,8 +33,13 @@ function MetricCard({ title, value, sub, color = 'text-neutral-900', icon }: Met
 
 export default function DashboardView() {
   const { agentOutputs, businessData, onboarded } = useAegis();
+  const [mounted, setMounted] = React.useState(false);
 
-  if (!onboarded || !agentOutputs || !businessData) {
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || !onboarded || !agentOutputs || !businessData) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[300px] gap-3 text-neutral-400 font-medium">
         <Activity className="animate-spin text-neutral-400" size={24} />

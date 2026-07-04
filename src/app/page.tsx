@@ -15,7 +15,9 @@ import BoardroomView from '@/components/BoardroomView';
 import ArchitectureView from '@/components/ArchitectureView';
 import ChatWorkspace from '@/components/ChatWorkspace';
 import { motion, AnimatePresence } from 'framer-motion';
-import ReactMarkdown from 'react-markdown';
+import dynamic from 'next/dynamic';
+
+const ReactMarkdown = dynamic(() => import('react-markdown'), { ssr: false });
 
 function WorkspaceContent() {
   const router = useRouter();
@@ -207,7 +209,9 @@ function WorkspaceContent() {
                         {isUser ? (
                           <p>{msg.text}</p>
                         ) : (
-                          <ReactMarkdown className="markdown-body text-[11.5px]">{msg.text}</ReactMarkdown>
+                          <div className="markdown-body text-[11.5px] prose prose-xs">
+                            <ReactMarkdown>{msg.text}</ReactMarkdown>
+                          </div>
                         )}
                       </div>
                       <span className="text-[9px] text-neutral-300 font-mono mt-1 px-1">
