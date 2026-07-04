@@ -8,7 +8,7 @@ import {
   BarChart, Bar,
   AreaChart, Area,
 } from 'recharts';
-import { ShieldAlert, TrendingUp, Cpu, Award, Zap, AlertTriangle, AlertCircle, DollarSign, Activity, Target } from 'lucide-react';
+import { ShieldAlert, TrendingUp, Cpu, Award, Zap, AlertTriangle, AlertCircle, DollarSign, Activity, Target, Landmark, Percent, RefreshCw } from 'lucide-react';
 
 interface MetricProps {
   title: string;
@@ -22,7 +22,7 @@ function MetricCard({ title, value, sub, color = 'text-neutral-900', icon }: Met
   return (
     <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-3">
-        <span className="text-[10px] font-bold tracking-wider text-neutral-400 uppercase">{title}</span>
+        <span className="text-[9px] font-bold tracking-wider text-neutral-400 uppercase">{title}</span>
         <span className="text-neutral-400 shrink-0">{icon}</span>
       </div>
       <div className={`text-2xl font-black tracking-tight ${color}`}>{value}</div>
@@ -72,16 +72,23 @@ export default function DashboardView() {
     <div className="p-8 max-w-6xl mx-auto space-y-8 overflow-y-auto max-h-screen custom-scrollbar pb-16">
       
       {/* Header */}
-      <div>
-        <span className="text-[10px] font-bold tracking-widest text-neutral-400 uppercase">5D Framework · Dominate Phase</span>
-        <h1 className="text-3xl font-extrabold tracking-tight text-neutral-800 mt-1">Executive Dashboard</h1>
-        <p className="text-xs text-neutral-400 mt-1">
-          Live business intelligence for <strong className="text-neutral-600">{businessData.company_name}</strong> — {businessData.industry} · {businessData.primary_goal}
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <span className="text-[10px] font-bold tracking-widest text-neutral-400 uppercase">5D Framework · Dominate Phase</span>
+          <h1 className="text-3xl font-extrabold tracking-tight text-neutral-800 mt-1">Executive Dashboard</h1>
+          <p className="text-xs text-neutral-400 mt-1">
+            Live business intelligence for <strong className="text-neutral-600">{businessData.company_name}</strong> — {businessData.industry} · {businessData.primary_goal}
+          </p>
+        </div>
+        <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-full shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          MASTER ORCHESTRATOR ONLINE
+        </div>
       </div>
 
-      {/* Metric Cards Grid */}
+      {/* 9 Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {/* Row 1 */}
         <MetricCard
           title="Business Health Score"
           value={`${ceo.health_score}/100`}
@@ -103,6 +110,8 @@ export default function DashboardView() {
           color="text-violet-600"
           icon={<Target size={16} />}
         />
+
+        {/* Row 2 */}
         <MetricCard
           title="Risk Signals"
           value={riskCount}
@@ -123,6 +132,29 @@ export default function DashboardView() {
           sub="Market momentum index"
           color="text-orange-500"
           icon={<Award size={16} />}
+        />
+
+        {/* Row 3 (New unit economics cards matching requirement 4) */}
+        <MetricCard
+          title="Cust. Acquisition Cost (CAC)"
+          value={finance.unit_economics.CAC}
+          sub="Average cost per contract"
+          color="text-neutral-800"
+          icon={<Percent size={15} />}
+        />
+        <MetricCard
+          title="Customer Lifetime Value (LTV)"
+          value={finance.unit_economics.LTV}
+          sub="Contract lifecycle revenue"
+          color="text-neutral-800"
+          icon={<Landmark size={15} />}
+        />
+        <MetricCard
+          title="LTV:CAC Ratio"
+          value={finance.unit_economics['LTV:CAC Ratio']}
+          sub="Unit economic yield health"
+          color="text-neutral-800"
+          icon={<RefreshCw size={15} />}
         />
       </div>
 
@@ -222,7 +254,7 @@ export default function DashboardView() {
       {/* Unit Economics & Risk Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
-          <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase">Unit Economics</h4>
+          <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase">Detailed Unit Economics</h4>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {Object.entries(finance.unit_economics).map(([k, v]) => (
               <div key={k} className="bg-neutral-50 rounded-xl p-3.5 border border-neutral-200/60">
@@ -237,7 +269,7 @@ export default function DashboardView() {
           <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase">Risk Alerts — Finance Agent</h4>
           <div className="space-y-3">
             {finance.risk_alerts.map((alert, i) => {
-              const colors = { red: 'bg-red-500 text-red-700 border-red-100 bg-red-50/50', amber: 'bg-amber-500 text-amber-700 border-amber-100 bg-amber-50/50', green: 'bg-emerald-500 text-emerald-700 border-emerald-100 bg-emerald-50/50' };
+              const colors = { red: 'bg-red-505 text-red-700 border-red-100 bg-red-50/50', amber: 'bg-amber-500 text-amber-700 border-amber-100 bg-amber-50/50', green: 'bg-emerald-500 text-emerald-700 border-emerald-100 bg-emerald-50/50' };
               const isRed = alert.level === 'red';
               const isAmber = alert.level === 'amber';
               return (

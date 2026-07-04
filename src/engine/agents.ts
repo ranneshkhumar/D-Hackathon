@@ -3,6 +3,13 @@
  * All 5 agents + AgentOrchestrator, pure client-side simulation
  */
 
+// Secure independent placeholder setup for API keys
+export const CEO_AGENT_API_KEY = process.env.NEXT_PUBLIC_CEO_AGENT_API_KEY || "aegis_key_ceo_sec_v1_placeholder";
+export const STRATEGY_AGENT_API_KEY = process.env.NEXT_PUBLIC_STRATEGY_AGENT_API_KEY || "aegis_key_strategy_sec_v1_placeholder";
+export const MARKETING_AGENT_API_KEY = process.env.NEXT_PUBLIC_MARKETING_AGENT_API_KEY || "aegis_key_marketing_sec_v1_placeholder";
+export const SALES_AGENT_API_KEY = process.env.NEXT_PUBLIC_SALES_AGENT_API_KEY || "aegis_key_sales_sec_v1_placeholder";
+export const FINANCE_AGENT_API_KEY = process.env.NEXT_PUBLIC_FINANCE_AGENT_API_KEY || "aegis_key_finance_sec_v1_placeholder";
+
 export interface CEOOutput {
   summary: string;
   health_score: number;
@@ -154,7 +161,7 @@ export const CEO_Agent = {
   input_desc: 'Business onboarding data (company profile, industry, revenue, goals)',
   output_desc: 'Executive Summary, Board Briefing, Business Health Score, Strategic Mandate',
 
-  run(businessData: BusinessData): CEOOutput {
+  run(businessData: BusinessData, customPrompt?: string): CEOOutput {
     const industry = businessData.industry || 'Technology';
     const company = businessData.company_name || 'Your Company';
     const revenue = businessData.annual_revenue || 1_000_000;
@@ -162,7 +169,7 @@ export const CEO_Agent = {
 
     const ctx = industryContextMap[industry] || ['market expansion', 'customer acquisition', 'revenue diversification'];
 
-    const summary = `${company} is positioned at a critical inflection point within the ${industry} sector. ` +
+    let summary = `${company} is positioned at a critical inflection point within the ${industry} sector. ` +
       `With an annual revenue baseline of $${revenue.toLocaleString()}, the immediate mandate is to accelerate ` +
       `${ctx[0]} through a disciplined ${ctx[1]} approach, ` +
       `targeting ${audience} as the primary growth vector. ` +
@@ -173,11 +180,15 @@ export const CEO_Agent = {
       `The Aegis Growth OS has computed a composite Business Health Score reflecting ` +
       `market readiness, operational capacity, and competitive positioning.`;
 
+    if (customPrompt) {
+      summary += `\n\n[Master Copilot Strategic Directive]: Resolving user analysis request: "${customPrompt}". CEO mandate has been configured to prioritize this objective.`;
+    }
+
     return {
       summary,
-      health_score: rand(62, 91),
-      growth_score: rand(55, 88),
-      mandate: `Achieve ${ctx[2]} within 12 months via ${ctx[1]}`,
+      health_score: customPrompt ? rand(58, 85) : rand(62, 91),
+      growth_score: customPrompt ? rand(60, 92) : rand(55, 88),
+      mandate: customPrompt ? `Resolve: ${customPrompt.slice(0, 50)}...` : `Achieve ${ctx[2]} within 12 months via ${ctx[1]}`,
       timestamp: now(),
     };
   },
@@ -196,7 +207,7 @@ export const Strategy_Agent = {
   input_desc: 'CEO mandate, business profile, market benchmarks, industry vertical data',
   output_desc: 'Growth Strategy Document, SWOT Analysis, Competitive Positioning, KPI Targets',
 
-  run(businessData: BusinessData, ceoOutput: CEOOutput): StrategyOutput {
+  run(businessData: BusinessData, ceoOutput: CEOOutput, customPrompt?: string): StrategyOutput {
     const industry = businessData.industry || 'Technology';
     const revenue = businessData.annual_revenue || 1_000_000;
 
@@ -224,13 +235,18 @@ export const Strategy_Agent = {
       },
     };
 
-    const strategy = strategiesMap[industry] || {
+    const strategy = { ...(strategiesMap[industry] || {
       primary: 'Market Penetration with authority-led positioning',
       pillars: ['Content moat construction', 'Strategic partnership matrix', 'Direct sales acceleration', 'Digital channel optimization'],
       kpis: { 'Revenue Growth': '25% YoY', 'Market Share': '+3–5%', 'Lead Velocity Rate': '+20% MoM', 'CAC Reduction': '15%' },
       markets: ['Primary TAM segments', 'Adjacent verticals', 'International expansion'],
       competitive_moat: 'Domain expertise + network effects',
-    };
+    }) };
+
+    if (customPrompt) {
+      strategy.primary = `Action Plan: ${customPrompt}`;
+      strategy.pillars = [...strategy.pillars, `Deploy specialized workflows targeting custom prompt variables`].slice(-4);
+    }
 
     const growth_projection = {
       Q1: Math.round(revenue * 1.08),
@@ -261,7 +277,7 @@ export const Marketing_Agent = {
   input_desc: 'Growth strategy, target audience profile, budget parameters, channel preferences',
   output_desc: 'Ad Campaigns, Email Funnels, Channel Mix, Content Calendar, Brand Voice Guidelines',
 
-  run(businessData: BusinessData): MarketingOutput {
+  run(businessData: BusinessData, customPrompt?: string): MarketingOutput {
     const industry = businessData.industry || 'Technology';
     const audience = businessData.target_audience || 'SMBs';
     const company = businessData.company_name || 'Your Company';
@@ -290,13 +306,18 @@ export const Marketing_Agent = {
       },
     };
 
-    const campaigns = campaignsMap[industry] || {
+    const campaigns = { ...(campaignsMap[industry] || {
       hero_ad: `${company}: The smart choice for ambitious ${audience}. Powered by AI. Proven by results.`,
       email_subject: '3 growth levers you\'re probably not using →',
-      email_body: `Hi [First Name],\n\n{company} has helped teams like yours unlock hidden revenue opportunities. Here are 3 strategies working right now...\n\n[CTA: Get the Full Playbook]`,
+      email_body: `Hi [First Name],\n\n${company} has helped teams like yours unlock hidden revenue opportunities. Here are 3 strategies working right now...\n\n[CTA: Get the Full Playbook]`,
       channels: ['LinkedIn', 'Google Ads', 'Content Marketing', 'Email', 'Partnerships'],
       hook: 'Smarter strategy. Faster growth.',
-    };
+    }) };
+
+    if (customPrompt) {
+      campaigns.hook = `Resolve Target Directives: ${customPrompt}`;
+      campaigns.hero_ad = `Supercharge operations to address: ${customPrompt}. Configured live strategy output.`;
+    }
 
     const content_calendar = [
       { week: 'Week 1', content: 'Brand awareness campaign launch', channel: 'LinkedIn + Google' },
@@ -322,7 +343,7 @@ export const Sales_Agent = {
   input_desc: 'Marketing campaigns, ICP definition, competitive positioning, pricing model',
   output_desc: 'Sales Scripts, Outbound Sequences, Pipeline Stages, Lead Scoring Model, Objection Handling',
 
-  run(businessData: BusinessData): SalesOutput {
+  run(businessData: BusinessData, customPrompt?: string): SalesOutput {
     const industry = businessData.industry || 'Technology';
     const audience = businessData.target_audience || 'SMBs';
     const company = businessData.company_name || 'Your Company';
@@ -344,7 +365,11 @@ export const Sales_Agent = {
       { day: 'Day 25', touch: 'Final value-add email: ROI calculator', goal: 'Conversion or recycle' },
     ];
 
-    const discovery_script = `OPENING:\n"Hi [Name], this is [Rep] from ${company}. I know your time is valuable — I'll keep this focused.\nWe've helped [2–3 similar companies in ${industry}] solve [core pain point]. I'd love to understand\nif the same challenge resonates with your team. Do you have 8 minutes?"\n\nDISCOVERY QUESTIONS:\n1. "Walk me through how you currently handle [key process]?"\n2. "Where does that process break down most often?"\n3. "What would perfect look like 12 months from now?"\n4. "If we could achieve [outcome], what would that mean for your ${audience} targets?"\n\nOBJECTION HANDLING:\n• "We already have a solution" → "That's great — what's the one thing you wish it did better?"\n• "Not the right time" → "Completely understand — what would make it the right time?"\n• "Too expensive" → "Fair — let's quantify the cost of NOT solving this. Can I share a quick calc?"\n\nCLOSE:\n"Based on what you've shared, I think we can make a real impact. Can we lock in 30 minutes next week\nfor a tailored walkthrough? I'll bring specific metrics from your industry vertical."`;
+    let discovery_script = `OPENING:\n"Hi [Name], this is [Rep] from ${company}. I know your time is valuable — I'll keep this focused.\nWe've helped [2–3 similar companies in ${industry}] solve [core pain point]. I'd love to understand\nif the same challenge resonates with your team. Do you have 8 minutes?"\n\nDISCOVERY QUESTIONS:\n1. "Walk me through how you currently handle [key process]?"\n2. "Where does that process break down most often?"\n3. "What would perfect look like 12 months from now?"\n4. "If we could achieve [outcome], what would that mean for your ${audience} targets?"\n\nOBJECTION HANDLING:\n• "We already have a solution" → "That's great — what's the one thing you wish it did better?"\n• "Not the right time" → "Completely understand — what would make it the right time?"\n• "Too expensive" → "Fair — let's quantify the cost of NOT solving this. Can I share a quick calc?"\n\nCLOSE:\n"Based on what you've shared, I think we can make a real impact. Can we lock in 30 minutes next week\nfor a tailored walkthrough? I'll bring specific metrics from your industry vertical."`;
+
+    if (customPrompt) {
+      discovery_script += `\n\n[Copilot Direct Response Objections]:\n• "How do you address: ${customPrompt.slice(0, 30)}?" → "Aegis isolates this immediately by dispatching specialized strategies. Let me show you."`;
+    }
 
     const lead_score_criteria = [
       { factor: 'Industry Match', weight: '25%', score_range: '0–25' },
@@ -359,8 +384,8 @@ export const Sales_Agent = {
       outbound_sequence,
       discovery_script,
       lead_score_criteria,
-      revenue_opportunity: Math.round((businessData.annual_revenue || 1_000_000) * randFloat(0.18, 0.35)),
-      lead_score: rand(68, 94),
+      revenue_opportunity: Math.round((businessData.annual_revenue || 1_000_000) * (customPrompt ? randFloat(0.12, 0.25) : randFloat(0.18, 0.35))),
+      lead_score: customPrompt ? rand(60, 88) : rand(68, 94),
       timestamp: now(),
     };
   },
@@ -379,7 +404,7 @@ export const Finance_Agent = {
   input_desc: 'Revenue data, growth projections, cost structure, market benchmarks',
   output_desc: 'Risk Alerts, Financial Health Metrics, Cash Flow Projections, Unit Economics Model',
 
-  run(businessData: BusinessData): FinanceOutput {
+  run(businessData: BusinessData, customPrompt?: string): FinanceOutput {
     const revenue = businessData.annual_revenue || 1_000_000;
     const industry = businessData.industry || 'Technology';
 
@@ -403,11 +428,18 @@ export const Finance_Agent = {
       ],
     };
 
-    const risk_alerts = riskTemplates[industry] || [
+    let risk_alerts = [...(riskTemplates[industry] || [
       { level: 'amber', title: 'Revenue Concentration Risk', desc: 'Top 3 clients represent 62% of revenue. Diversification strategy needed.' },
       { level: 'amber', title: 'Operational Cost Pressure', desc: 'OpEx growing 3x faster than revenue. Process automation audit recommended.' },
       { level: 'green', title: 'Gross Margin Stable', desc: 'Margins holding at 58% — within target range. Monitor for Q4 expansion.' },
-    ];
+    ])];
+
+    if (customPrompt) {
+      risk_alerts = [
+        { level: 'red', title: 'Copilot Focus Risk', desc: `Analyzing implications of custom query: "${customPrompt}". Reviewing cash reserves and potential margin leakage.` },
+        ...risk_alerts
+      ].slice(0, 4);
+    }
 
     const monthly_revenue = revenue / 12;
     const cash_flow = Array.from({ length: 12 }, (_, i) => ({
@@ -416,10 +448,10 @@ export const Finance_Agent = {
     }));
 
     const unit_economics = {
-      CAC: `$${rand(180, 420).toLocaleString()}`,
-      LTV: `$${rand(1800, 5400).toLocaleString()}`,
-      'LTV:CAC Ratio': `${randFloat(3.2, 7.1).toFixed(1)}x`,
-      'Payback Period': `${rand(7, 14)} months`,
+      CAC: `$${(customPrompt ? rand(240, 510) : rand(180, 420)).toLocaleString()}`,
+      LTV: `$${(customPrompt ? rand(2100, 6200) : rand(1800, 5400)).toLocaleString()}`,
+      'LTV:CAC Ratio': `${(customPrompt ? randFloat(2.8, 5.9) : randFloat(3.2, 7.1)).toFixed(1)}x`,
+      'Payback Period': `${customPrompt ? rand(9, 16) : rand(7, 14)} months`,
       'Gross Margin': `${rand(55, 78)}%`,
       'Burn Multiple': `${randFloat(0.8, 2.4).toFixed(1)}x`,
     };
@@ -427,8 +459,8 @@ export const Finance_Agent = {
     return {
       risk_alerts,
       cash_flow,
-      customer_health: rand(70, 90),
-      market_readiness: rand(65, 88),
+      customer_health: customPrompt ? rand(62, 85) : rand(70, 90),
+      market_readiness: customPrompt ? rand(60, 84) : rand(65, 88),
       unit_economics,
       timestamp: now(),
     };
@@ -440,7 +472,7 @@ export const Finance_Agent = {
 // ─────────────────────────────────────────────
 export const AGENTS_META = [CEO_Agent, Strategy_Agent, Marketing_Agent, Sales_Agent, Finance_Agent];
 
-export function runAgentOrchestrator(businessData: BusinessData): { outputs: AgentOutputs; log: LogEntry[] } {
+export function runAgentOrchestrator(businessData: BusinessData, customPrompt?: string): { outputs: AgentOutputs; log: LogEntry[] } {
   const log: LogEntry[] = [];
   const outputs: Partial<AgentOutputs> = {};
 
@@ -448,38 +480,42 @@ export function runAgentOrchestrator(businessData: BusinessData): { outputs: Age
     log.push({ time: now(), agent, message, color });
   };
 
+  // Prepend Master Copilot log if custom prompt is passed
+  if (customPrompt) {
+    addLog(
+      '🤖 MASTER COPILOT',
+      `User request received. Parsing objective... Dispatching parameters to specialized units. Directive: "${customPrompt}"`,
+      '#ea580c' // Orange theme for master executive copilot
+    );
+  }
+
   // CEO
-  addLog('CEO Agent', `Initializing intelligence sweep for ${businessData.company_name || 'company'}...`, '#3b82f6');
-  addLog('CEO Agent', 'Parsing business documentation and extracting strategic signals...', '#3b82f6');
-  const ceo = CEO_Agent.run(businessData);
+  addLog('CEO Agent', `[Secure Key: ${CEO_AGENT_API_KEY.slice(0, 12)}...] Initializing intelligence sweep...`, '#3b82f6');
+  const ceo = CEO_Agent.run(businessData, customPrompt);
   outputs.ceo = ceo;
   addLog('CEO Agent', `✅ Executive mandate set: ${ceo.mandate.slice(0, 60)}...`, '#10b981');
 
   // Strategy
-  addLog('Strategy Agent', 'Receiving mandate from CEO Agent. Initiating market analysis...', '#8b5cf6');
-  addLog('Strategy Agent', `Querying ${businessData.industry || 'industry'} vertical intelligence database...`, '#8b5cf6');
-  const strategy = Strategy_Agent.run(businessData, ceo);
+  addLog('Strategy Agent', `[Secure Key: ${STRATEGY_AGENT_API_KEY.slice(0, 12)}...] Initiating strategy mapping...`, '#8b5cf6');
+  const strategy = Strategy_Agent.run(businessData, ceo, customPrompt);
   outputs.strategy = strategy;
   addLog('Strategy Agent', `✅ Growth strategy compiled: ${strategy.strategy.primary.slice(0, 55)}...`, '#10b981');
 
   // Marketing
-  addLog('Marketing Agent', 'Strategy blueprint received. Generating multi-channel campaigns...', '#06b6d4');
-  addLog('Marketing Agent', 'Synthesizing ad copy, email funnels, and content calendar...', '#06b6d4');
-  const marketing = Marketing_Agent.run(businessData);
+  addLog('Marketing Agent', `[Secure Key: ${MARKETING_AGENT_API_KEY.slice(0, 12)}...] Compiling channels & copy...`, '#06b6d4');
+  const marketing = Marketing_Agent.run(businessData, customPrompt);
   outputs.marketing = marketing;
   addLog('Marketing Agent', '✅ Campaign suite ready. 4-week content calendar generated.', '#10b981');
 
   // Sales
-  addLog('Sales Agent', 'Marketing assets received. Building outbound sales engine...', '#10b981');
-  addLog('Sales Agent', 'Constructing pipeline stages, lead scoring, and discovery scripts...', '#10b981');
-  const sales = Sales_Agent.run(businessData);
+  addLog('Sales Agent', `[Secure Key: ${SALES_AGENT_API_KEY.slice(0, 12)}...] Building outbound structures...`, '#10b981');
+  const sales = Sales_Agent.run(businessData, customPrompt);
   outputs.sales = sales;
   addLog('Sales Agent', `✅ Revenue opportunity identified: $${sales.revenue_opportunity.toLocaleString()}`, '#10b981');
 
   // Finance
-  addLog('Finance Agent', 'Receiving all outputs. Running financial risk assessment...', '#f59e0b');
-  addLog('Finance Agent', 'Modeling cash flow, unit economics, and risk vectors...', '#f59e0b');
-  const finance = Finance_Agent.run(businessData);
+  addLog('Finance Agent', `[Secure Key: ${FINANCE_AGENT_API_KEY.slice(0, 12)}...] Executing risk audit & cash projection...`, '#f59e0b');
+  const finance = Finance_Agent.run(businessData, customPrompt);
   outputs.finance = finance;
   addLog('Finance Agent', `✅ Risk assessment complete. ${finance.risk_alerts.length} signals flagged.`, '#10b981');
 

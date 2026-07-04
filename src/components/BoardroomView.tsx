@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { useAegis } from '../context/AegisContext';
-import { AGENTS_META } from '../engine/agents';
-import { Clock, CheckCircle2, ChevronRight, Activity, Terminal } from 'lucide-react';
+import { AGENTS_META, CEO_AGENT_API_KEY, STRATEGY_AGENT_API_KEY, MARKETING_AGENT_API_KEY, SALES_AGENT_API_KEY, FINANCE_AGENT_API_KEY } from '../engine/agents';
+import { Activity, Terminal, Shield } from 'lucide-react';
 
 export default function BoardroomView() {
   const { agentOutputs, agentLog, onboarded, businessData } = useAegis();
@@ -20,15 +20,26 @@ export default function BoardroomView() {
 
   const { ceo, strategy, marketing, sales, finance } = agentOutputs;
 
+  const renderApiBadge = (keyPlaceholder: string) => (
+    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 shrink-0">
+      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+      <span>API Connected</span>
+      <span className="text-[8px] opacity-60 font-mono">({keyPlaceholder.slice(0, 10)}...)</span>
+    </div>
+  );
+
   const renderCEO = () => (
     <div className="space-y-6">
       <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">👔</span>
-          <div>
-            <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wide">CEO Agent</h3>
-            <p className="text-[11px] text-neutral-400">Chief Intelligence Officer · Synthesizes board briefing mandates</p>
+        <div className="flex items-center justify-between gap-3 border-b border-neutral-100 pb-3">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">👔</span>
+            <div>
+              <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wide">CEO Agent</h3>
+              <p className="text-[11px] text-neutral-400">Chief Intelligence Officer · Synthesizes board briefing mandates</p>
+            </div>
           </div>
+          {renderApiBadge(CEO_AGENT_API_KEY)}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -62,12 +73,15 @@ export default function BoardroomView() {
     return (
       <div className="space-y-5">
         <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl w-10 h-10 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center">🧭</span>
-            <div>
-              <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wide">Strategy Agent</h3>
-              <p className="text-[11px] text-neutral-400">Chief Strategy Architect · Maps growth pillars & SWOT moats</p>
+          <div className="flex items-center justify-between gap-3 border-b border-neutral-100 pb-3">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl w-10 h-10 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center">🧭</span>
+              <div>
+                <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wide">Strategy Agent</h3>
+                <p className="text-[11px] text-neutral-400">Chief Strategy Architect · Maps growth pillars & SWOT moats</p>
+              </div>
             </div>
+            {renderApiBadge(STRATEGY_AGENT_API_KEY)}
           </div>
 
           <div className="space-y-1">
@@ -128,12 +142,15 @@ export default function BoardroomView() {
     return (
       <div className="space-y-5">
         <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl w-10 h-10 rounded-xl bg-cyan-50 border border-cyan-100 flex items-center justify-center">📣</span>
-            <div>
-              <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wide">Marketing Agent</h3>
-              <p className="text-[11px] text-neutral-400">Chief Growth Marketer · Builds marketing & campaign frameworks</p>
+          <div className="flex items-center justify-between gap-3 border-b border-neutral-100 pb-3">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl w-10 h-10 rounded-xl bg-cyan-50 border border-cyan-100 flex items-center justify-center">📣</span>
+              <div>
+                <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wide">Marketing Agent</h3>
+                <p className="text-[11px] text-neutral-400">Chief Growth Marketer · Builds marketing & campaign frameworks</p>
+              </div>
             </div>
+            {renderApiBadge(MARKETING_AGENT_API_KEY)}
           </div>
 
           <div className="space-y-1">
@@ -201,12 +218,15 @@ export default function BoardroomView() {
   const renderSales = () => (
     <div className="space-y-5">
       <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">🎯</span>
-          <div>
-            <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wide">Sales Agent</h3>
-            <p className="text-[11px] text-neutral-400">Chief Revenue Officer · Configures lead scoring & discovery frameworks</p>
+        <div className="flex items-center justify-between gap-3 border-b border-neutral-100 pb-3">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">🎯</span>
+            <div>
+              <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wide">Sales Agent</h3>
+              <p className="text-[11px] text-neutral-400">Chief Revenue Officer · Configures lead scoring & discovery frameworks</p>
+            </div>
           </div>
+          {renderApiBadge(SALES_AGENT_API_KEY)}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -277,12 +297,15 @@ export default function BoardroomView() {
     return (
       <div className="space-y-5">
         <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center">💹</span>
-            <div>
-              <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wide">Finance Agent</h3>
-              <p className="text-[11px] text-neutral-400">Chief Financial Intelligence Officer · Audits risks, cash burn, margin health</p>
+          <div className="flex items-center justify-between gap-3 border-b border-neutral-100 pb-3">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center">💹</span>
+              <div>
+                <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wide">Finance Agent</h3>
+                <p className="text-[11px] text-neutral-400">Chief Financial Intelligence Officer · Audits risks, cash burn, margin health</p>
+              </div>
             </div>
+            {renderApiBadge(FINANCE_AGENT_API_KEY)}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -369,18 +392,23 @@ export default function BoardroomView() {
               Execution Timeline
             </h4>
             <div className="timeline space-y-0 max-h-[500px] overflow-y-auto custom-scrollbar pr-1">
-              {agentLog.map((entry, idx) => (
-                <div key={idx} className="timeline-item py-2 border-b border-neutral-50 last:border-0 flex gap-2">
-                  <span className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: entry.color }} />
-                  <div>
-                    <div className="flex gap-1.5 items-center leading-none mb-1">
-                      <span className="text-[9px] font-bold text-neutral-300 font-mono">{entry.time}</span>
-                      <span className="text-[10px] font-extrabold uppercase" style={{ color: entry.color }}>{entry.agent.split(' ')[0]}</span>
+              {agentLog.map((entry, idx) => {
+                const isMaster = entry.agent === '🤖 MASTER COPILOT';
+                return (
+                  <div key={idx} className="timeline-item py-2 border-b border-neutral-50 last:border-0 flex gap-2">
+                    <span className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: entry.color }} />
+                    <div className="min-w-0">
+                      <div className="flex gap-1.5 items-center leading-none mb-1">
+                        <span className="text-[9px] font-bold text-neutral-300 font-mono">{entry.time}</span>
+                        <span className="text-[10px] font-extrabold uppercase" style={{ color: entry.color }}>
+                          {isMaster ? 'MASTER COPILOT' : entry.agent.split(' ')[0]}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-neutral-400 leading-snug break-words">{entry.message}</p>
                     </div>
-                    <p className="text-[11px] text-neutral-400 leading-snug">{entry.message}</p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
