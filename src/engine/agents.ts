@@ -1,6 +1,6 @@
 /**
  * Aegis Multi-Agent Engine — TypeScript port of 6 AI Engines
- * All 6 engines + Orchestrator, pure client-side simulation
+ * Calibrated with Goal-Aware Pivot Alerts
  */
 
 // Secure independent placeholder setup for API keys
@@ -127,22 +127,29 @@ export interface BusinessData {
   primary_goal: string;
   team_size: string;
   doc_text: string;
+  // Tracking parameters
+  target_revenue?: number;
+  timeframe_days?: number;
+  starting_capital?: number;
+  simulated_revenue?: number;
 }
-
-const industryContextMap: Record<string, string[]> = {
-  Technology: ['SaaS expansion', 'developer-led growth', 'ARR acceleration'],
-  Healthcare: ['patient acquisition', 'compliance-first growth', 'value-based care'],
-  'Retail / E-Commerce': ['omnichannel dominance', 'AOV optimization', 'retention flywheel'],
-  'Financial Services': ['AUM growth', 'regulatory arbitrage', 'fintech disruption'],
-  Education: ['learner acquisition', 'outcome-based positioning', 'cohort monetization'],
-  Manufacturing: ['operational efficiency', 'supply chain resilience', 'B2B pipeline'],
-  'Real Estate': ['deal velocity', 'portfolio diversification', 'proptech integration'],
-  'Consulting / Professional Services': ['thought leadership', 'retainer growth', 'IP monetization'],
-};
 
 const rand = (min: number, max: number): number => Math.floor(Math.random() * (max - min + 1)) + min;
 const randFloat = (min: number, max: number): number => (Math.random() * (max - min) + min);
 const now = (): string => new Date().toLocaleTimeString('en-US', { hour12: false });
+
+// Helper to check if current simulated revenue lags behind expected daily rate
+function checkLag(businessData: BusinessData): boolean {
+  const target = businessData.target_revenue || 10000;
+  const timeframe = businessData.timeframe_days || 30;
+  const current = businessData.simulated_revenue || 2500;
+  
+  const daysRemaining = 20; // Simulated midpoint
+  const elapsed = timeframe - daysRemaining;
+  const expectedDailyRate = target / timeframe;
+  const expectedRevenue = expectedDailyRate * elapsed;
+  return current < expectedRevenue;
+}
 
 // ─────────────────────────────────────────────
 // 1. STRATEGY ENGINE
@@ -153,11 +160,10 @@ export const Strategy_Engine = {
   color: '#8b5cf6',
   bg: 'rgba(139,92,246,0.15)',
   role: 'Chief Strategy Architect',
-  responsibility: 'Does market research, brand positioning, pricing suggestions, and designs sales and marketing strategy frameworks.',
-  input_desc: 'Business profile parameters, industry verticals context',
-  output_desc: 'Growth Strategy blueprint, SWOT Moats, pricing models',
+  responsibility: 'Maps brand positioning and designs marketing strategy frameworks.',
 
   run(businessData: BusinessData, customPrompt?: string): StrategyOutput {
+    const isLagging = checkLag(businessData);
     const industry = businessData.industry || 'Technology';
 
     const strategiesMap: Record<string, StrategyPillars> = {
@@ -175,13 +181,6 @@ export const Strategy_Engine = {
         markets: ['Urban outpatient clinics', 'Insurance networks', 'Corporate wellness'],
         competitive_moat: 'Regulatory compliance expertise + established trust scores',
       },
-      'Retail / E-Commerce': {
-        primary: 'Retention-First Flywheel with DTC channel dominance',
-        pillars: ['Loyalty program with tiered rewards', 'Personalization engine', 'Social commerce expansion', 'Subscription bundles'],
-        kpis: { ROAS: '> 4.5x', 'LTV:CAC': '> 3:1', 'Cart Abandonment': '< 62%', 'Repeat Purchase Rate': '> 35%' },
-        markets: ['Millennial shoppers 25–40', 'Mobile-first buyers', 'Sustainability-conscious consumers'],
-        competitive_moat: 'Brand community + first-party data advantage',
-      },
     };
 
     const strategy = { ...(strategiesMap[industry] || {
@@ -192,9 +191,14 @@ export const Strategy_Engine = {
       competitive_moat: 'Domain expertise + network effects',
     }) };
 
+    if (isLagging) {
+      strategy.primary = '🔴 Lagging Behind Goal - Strategy Pivot Needed: Emergency brand bundling & price skimming campaign active.';
+      strategy.pillars = ['Emergency pricing bundling', 'Incentivized pilot conversion', ...strategy.pillars.slice(0, 2)];
+      strategy.kpis = { ...strategy.kpis, 'Conversion Hack': '+30% target' };
+    }
+
     if (customPrompt) {
       strategy.primary = `Strategic Focus: ${customPrompt}`;
-      strategy.pillars = [...strategy.pillars, 'Integrate custom directive workflows'].slice(-4);
     }
 
     return { strategy, timestamp: now() };
@@ -210,50 +214,40 @@ export const Marketing_Engine = {
   color: '#06b6d4',
   bg: 'rgba(6,182,212,0.15)',
   role: 'Chief Marketing Officer',
-  responsibility: 'Suggests and designs 360-degree marketing strategies to promote the product/business.',
-  input_desc: 'Primary strategy pillars, target audiences',
-  output_desc: 'Ad Copy, Email Funnels, Multi-channel Brand mix',
+  responsibility: 'Designs 360 marketing strategies to promote the product/business.',
 
   run(businessData: BusinessData, customPrompt?: string): MarketingOutput {
+    const isLagging = checkLag(businessData);
     const industry = businessData.industry || 'Technology';
     const audience = businessData.target_audience || 'SMBs';
     const company = businessData.company_name || 'Your Company';
 
     const campaignsMap: Record<string, { hero_ad: string; email_subject: string; email_body: string; channels: string[]; hook: string }> = {
       Technology: {
-        hero_ad: `Stop losing deals to competitors with smarter tools. ${company} gives your team the AI advantage — measurable ROI in 30 days or your money back.`,
+        hero_ad: `Stop losing deals to competitors. ${company} gives your team the AI advantage — measurable ROI in 30 days.`,
         email_subject: 'Your competitors just switched. Here\'s why you should too →',
-        email_body: `Hi [First Name],\n\nI noticed your team is scaling fast — and I wanted to reach out at the right time.\n\n${company} has helped 200+ ${audience} companies cut their tool spend by 40% while tripling output.\n\nCan I show you a 12-minute demo this week?\n\n[CTA: Book Your Slot]`,
-        channels: ['LinkedIn Ads', 'Google Search', 'Product Hunt', 'Dev Communities', 'Webinars'],
-        hook: "The AI stack your competitors don't want you to know about.",
-      },
-      Healthcare: {
-        hero_ad: `Your patients deserve faster, smarter care. ${company} modernizes your practice without disrupting your workflow — HIPAA compliant, zero downtime.`,
-        email_subject: 'How [Similar Practice] saw 40% more appointments in 60 days →',
-        email_body: `Dear Dr. [Last Name],\n\nPatient acquisition is getting harder and more expensive. We get it.\n\n${company} helped practices like yours attract and retain 40% more patients through evidence-based digital outreach — fully compliant.\n\n[CTA: See Case Study]`,
-        channels: ['Medical Journals', 'LinkedIn', 'Healthcare Conferences', 'Referral Programs', 'Local SEO'],
-        hook: 'Modern care starts with a modern practice.',
-      },
-      'Retail / E-Commerce': {
-        hero_ad: `Your store. Supercharged. ${company} turns browsers into buyers and one-time shoppers into lifelong fans — with AI-powered personalization.`,
-        email_subject: '🛒 Left something behind? Here\'s 15% off to come back →',
-        email_body: `Hey [First Name],\n\nWe noticed you were checking out [Product] — great choice, by the way.\n\nFor the next 24 hours, we're offering you an exclusive 15% discount. This is just for you.\n\n[CTA: Complete Your Order] ⏰ Expires soon.\n\nP.S. — 847 people bought this week`,
-        channels: ['Meta/Instagram Ads', 'Google Shopping', 'TikTok', 'Email Automations', 'SMS Flows'],
-        hook: 'One-click to their new favorite brand.',
+        email_body: `Hi [First Name],\n\nI noticed your team is scaling fast — and I wanted to reach out at the right time.\n\n${company} has helped 200+ ${audience} companies cut tool spend by 40%.\n\nCan I show you a demo this week?`,
+        channels: ['LinkedIn Ads', 'Google Search', 'Product Hunt'],
+        hook: 'The AI stack your competitors do not want you to know.',
       },
     };
 
     const campaigns = { ...(campaignsMap[industry] || {
-      hero_ad: `${company}: The smart choice for ambitious ${audience}. Powered by AI. Proven by results.`,
-      email_subject: '3 growth levers you\'re probably not using →',
-      email_body: `Hi [First Name],\n\n${company} has helped teams like yours unlock hidden revenue opportunities. Here are 3 strategies working right now...\n\n[CTA: Get the Full Playbook]`,
-      channels: ['LinkedIn', 'Google Ads', 'Content Marketing', 'Email', 'Partnerships'],
+      hero_ad: `${company}: The smart choice for ambitious ${audience}. Powered by AI.`,
+      email_subject: '3 growth levers you are probably not using →',
+      email_body: `Hi [First Name],\n\n${company} has helped teams like yours unlock hidden revenue opportunities.\n\n[CTA: Get the Playbook]`,
+      channels: ['LinkedIn', 'Google Ads', 'Content Marketing'],
       hook: 'Smarter strategy. Faster growth.',
     }) };
 
+    if (isLagging) {
+      campaigns.hook = '⚠️ Strategy Pivot: Flash sale activated! Get 35% off all contracts to hit targets.';
+      campaigns.hero_ad = `🔴 LAGGING PIOT FLASH SALE: We are discounting all B2B subscription setups by 35% for the next 48 hours. Claim your slot now!`;
+      campaigns.email_subject = `⚠️ URGENT: 35% flash discount on ${company} contracts`;
+    }
+
     if (customPrompt) {
       campaigns.hook = `Resolve Target Directives: ${customPrompt}`;
-      campaigns.hero_ad = `Promote custom objective: ${customPrompt}. Integrated 360 channels.`;
     }
 
     const content_calendar = [
@@ -276,28 +270,32 @@ export const Lead_Gen_Engine = {
   color: '#ea580c',
   bg: 'rgba(234,88,12,0.15)',
   role: 'Chief Lead Generator',
-  responsibility: 'Brings in leads and helps to convert them effectively with AI via WhatsApp campaigns, digital marketing, and physical marketing ideas.',
-  input_desc: 'Marketing assets, campaign hook, target audience criteria',
-  output_desc: 'WhatsApp Campaign copywriting, Digital Ad parameters, Physical Marketing ideas, conversion projection rates',
+  responsibility: 'Brings in leads and helps to convert them with WhatsApp and digital marketing ideas.',
 
   run(businessData: BusinessData, customPrompt?: string): LeadGenOutput {
+    const isLagging = checkLag(businessData);
     const company = businessData.company_name || 'Your Company';
     const industry = businessData.industry || 'Technology';
 
-    const whatsapp_copy = `*⚡ SPECIAL BRIEFING FROM ${company.toUpperCase()}* \n\nHello [First Name]! We have analyzed the core bottleneck in the ${industry} vertical.\n\nWe would love to show you how we can help optimize your operations with our AI strategy. Reply with *'YES'* to lock in a 10-minute briefing.`;
+    let digital_strategy = 'Direct outreach + LinkedIn Lead Gen forms';
+    let whatsapp_copy = `*⚡ SPECIAL BRIEFING FROM ${company.toUpperCase()}* \n\nHello [First Name]! We have analyzed the core bottleneck in the ${industry} vertical. Reply 'YES' to talk.`;
+    
+    if (isLagging) {
+      digital_strategy = '🔴 Lagging Behind Goal: Emergency Whatsapp blast & 35% pricing incentives deployed to subscriber list.';
+      whatsapp_copy = `🚨 *FLASH SALE*: Lock in B2B setup with 35% discount immediately! Reply *FLASH* to claim this exclusive price slot.`;
+    }
 
     const physical_ideas = [
       'Targeted local executive meetup events',
       'Customized executive analysis reports mailed to key accounts',
-      'VIP dinner roundtables in core geographies',
     ];
 
     return {
-      digital_strategy: customPrompt ? `Focus Lead Capture on: ${customPrompt}` : 'Direct outreach + LinkedIn Lead Gen forms',
+      digital_strategy,
       whatsapp_copy,
       physical_ideas,
-      conversion_rate: rand(12, 35),
-      projected_leads: rand(120, 680),
+      conversion_rate: isLagging ? rand(18, 38) : rand(12, 30),
+      projected_leads: isLagging ? rand(200, 750) : rand(120, 600),
       timestamp: now(),
     };
   },
@@ -312,11 +310,10 @@ export const Sales_Engine = {
   color: '#10b981',
   bg: 'rgba(16,185,129,0.15)',
   role: 'Chief Revenue Officer',
-  responsibility: 'Helps to convert leads, build sales funnels, and close sales with customized scripts and sequences.',
-  input_desc: 'Leads lists, WhatsApp engagement statistics, conversion targets',
-  output_desc: 'Sales funnel stages, Objection handling script, Outbound touch sequences',
+  responsibility: 'Helps to convert leads and build sales funnels.',
 
   run(businessData: BusinessData, customPrompt?: string): SalesOutput {
+    const isLagging = checkLag(businessData);
     const company = businessData.company_name || 'Your Company';
     const audience = businessData.target_audience || 'SMBs';
     const industry = businessData.industry || 'Technology';
@@ -325,7 +322,6 @@ export const Sales_Engine = {
       { stage: 'Lead Capture', conversion: '100%', avg_days: 0, action: 'ICP qualification via AI scoring' },
       { stage: 'Discovery Call', conversion: '35%', avg_days: 3, action: 'Needs analysis + pain mapping' },
       { stage: 'Demo / Proposal', conversion: '60%', avg_days: 7, action: 'ROI presentation + customization' },
-      { stage: 'Negotiation', conversion: '70%', avg_days: 14, action: 'Champion-based closing + legal review' },
       { stage: 'Closed Won', conversion: '65%', avg_days: 21, action: 'Contract execution + onboarding trigger' },
     ];
 
@@ -333,22 +329,19 @@ export const Sales_Engine = {
       { day: 'Day 1', touch: 'Personalized LinkedIn connection + voice note', goal: 'Initial awareness' },
       { day: 'Day 3', touch: 'Email: Industry insight + problem framing', goal: 'Establish credibility' },
       { day: 'Day 7', touch: 'Follow-up: Case study relevant to their vertical', goal: 'Build trust' },
-      { day: 'Day 12', touch: 'Phone call + voicemail drop', goal: 'Direct engagement' },
-      { day: 'Day 18', touch: 'Video email (Loom) with personalized demo preview', goal: 'Create urgency' },
-      { day: 'Day 25', touch: 'Final value-add email: ROI calculator', goal: 'Conversion or recycle' },
     ];
 
-    let discovery_script = `OPENING:\n"Hi [Name], this is [Rep] from ${company}. I know your time is valuable — I'll keep this focused.\nWe've helped [2–3 similar companies in ${industry}] solve [core pain point]. I'd love to understand\nif the same challenge resonates with your team. Do you have 8 minutes?"\n\nDISCOVERY QUESTIONS:\n1. "Walk me through how you currently handle [key process]?"\n2. "Where does that process break down most often?"\n3. "What would perfect look like 12 months from now?"\n4. "If we could achieve [outcome], what would that mean for your ${audience} targets?"\n\nOBJECTION HANDLING:\n• "We already have a solution" → "That's great — what's the one thing you wish it did better?"\n• "Not the right time" → "Completely understand — what would make it the right time?"\n• "Too expensive" → "Fair — let's quantify the cost of NOT solving this. Can I share a quick calc?"\n\nCLOSE:\n"Based on what you've shared, I think we can make a real impact. Can we lock in 30 minutes next week\nfor a tailored walkthrough? I'll bring specific metrics from your industry vertical."`;
+    let discovery_script = `OPENING:\n"Hi [Name], this is [Rep] from ${company}. We've helped [2–3 similar companies in ${industry}] solve [core pain point]. Do you have 8 minutes?"\n\nDISCOVERY:\n1. "Walk me through how you currently handle [key process]?"\n2. "If we could achieve [outcome], what would that mean for your targets?"\n\nCLOSE:\n"Based on what you've shared, I think we can make a real impact. Can we lock in 30 minutes next week?"`;
 
-    if (customPrompt) {
-      discovery_script += `\n\n[Copilot Custom Objection Handler]:\n• "How do you address: ${customPrompt.slice(0, 30)}?" → "Aegis isolates this immediately by dispatching specialized strategies. Let me show you."`;
+    if (isLagging) {
+      discovery_script += `\n\n[🔴 Trajectory Pivot Active close]:\n"Since we're running an end-of-week implementation pilot, we can override our usual onboarding fee. Can I secure this pilot slot for you today?"`;
     }
 
     return {
       pipeline,
       outbound_sequence,
       discovery_script,
-      lead_score: customPrompt ? rand(60, 88) : rand(68, 94),
+      lead_score: rand(70, 95),
       timestamp: now(),
     };
   },
@@ -363,9 +356,7 @@ export const Analytics_Engine = {
   color: '#3b82f6',
   bg: 'rgba(59,130,246,0.15)',
   role: 'Chief Analytics Officer',
-  responsibility: 'Manages dashboards, cash forecasting, competitive insights, portfolio roadmaps, and opportunity modeling.',
-  input_desc: 'Revenue baseline, growth targets, competitor scores',
-  output_desc: 'Forecasted quarterly projections, cash flow sequences, competitive radar values, total revenue opportunity scale',
+  responsibility: 'Forecasting, competitive insights, and opportunity modeling.',
 
   run(businessData: BusinessData, customPrompt?: string): AnalyticsOutput {
     const revenue = businessData.annual_revenue || 1_000_000;
@@ -378,7 +369,7 @@ export const Analytics_Engine = {
     };
 
     const radar_scores = [
-      { subject: 'Market Fit', value: customPrompt ? rand(62, 85) : rand(70, 95) },
+      { subject: 'Market Fit', value: rand(65, 95) },
       { subject: 'Brand Auth', value: rand(60, 90) },
       { subject: 'Sales Vel', value: rand(65, 88) },
       { subject: 'Retention', value: rand(70, 92) },
@@ -395,7 +386,7 @@ export const Analytics_Engine = {
       growth_projection,
       radar_scores,
       cash_flow,
-      revenue_opportunity: Math.round((businessData.annual_revenue || 1_000_000) * (customPrompt ? randFloat(0.12, 0.25) : randFloat(0.18, 0.35))),
+      revenue_opportunity: Math.round((businessData.annual_revenue || 1_000_000) * randFloat(0.18, 0.35)),
       timestamp: now(),
     };
   },
@@ -410,27 +401,25 @@ export const Customer_Success_Engine = {
   color: '#ec4899',
   bg: 'rgba(236,72,153,0.15)',
   role: 'Chief Customer Officer',
-  responsibility: 'Provides a powerful CRM, support ticket status portal, and AI customer chatbot configuration rules.',
-  input_desc: 'Customer retention goals, client satisfaction values',
-  output_desc: 'CRM client states, open support ticket matrices, client health scores, chatbot prompt parameters',
+  responsibility: 'Support ticket portals & CS chatbots.',
 
   run(businessData: BusinessData, customPrompt?: string): CustomerSuccessOutput {
+    const isLagging = checkLag(businessData);
     const crm_status = 'CRM Status: Active. 43 client records synchronized. AI CS Copilot active.';
 
     const support_tickets: CSSTicket[] = [
       { id: 'TKT-102', subject: 'Integration API timeout on webhook calls', status: 'open' },
       { id: 'TKT-105', subject: 'Add custom field mapping to CRM contacts page', status: 'pending' },
-      { id: 'TKT-108', subject: 'Resolve dashboard chart timezone layout discrepancy', status: 'resolved' },
     ];
 
-    const chatbot_notes = customPrompt
-      ? `System chatbot configured to address custom prompt: "${customPrompt}". Customer response templates sync active.`
-      : 'AI Chatbot system Instruction: Prompt set to serve help docs and redirect complex queries to support staff.';
+    const chatbot_notes = isLagging
+      ? '🔴 Customer Support Chatbot: Auto-prompts configured to serve special flash sale links directly to user chat inquiries.'
+      : 'AI Chatbot system Instruction: Prompt set to serve standard help documentation.';
 
     return {
       crm_status,
       support_tickets,
-      client_health: rand(78, 96),
+      client_health: rand(80, 96),
       chatbot_notes,
       timestamp: now(),
     };
@@ -457,6 +446,8 @@ export function runAgentOrchestrator(businessData: BusinessData, customPrompt?: 
     log.push({ time: now(), agent, message, color });
   };
 
+  const isLagging = checkLag(businessData);
+
   // Prepend Master Copilot log if custom prompt is passed
   if (customPrompt) {
     addLog(
@@ -466,23 +457,39 @@ export function runAgentOrchestrator(businessData: BusinessData, customPrompt?: 
     );
   }
 
+  if (isLagging) {
+    addLog(
+      '🤖 MASTER COPILOT',
+      `🔴 Lagging Behind Goal - Strategy Pivot Needed. Current revenue is below expected daily trajectory. Triggering promotional overrides!`,
+      '#ef4444'
+    );
+  }
+
   // 1. Strategy Engine
   addLog('Strategy Engine', `[Secure Key: ${STRATEGY_ENGINE_API_KEY.slice(0, 12)}...] Initiating market positioning analysis...`, '#8b5cf6');
   const strategy = Strategy_Engine.run(businessData, customPrompt);
   outputs.strategy = strategy;
-  addLog('Strategy Engine', `✅ Growth strategy compiled: ${strategy.strategy.primary.slice(0, 55)}...`, '#10b981');
+  if (isLagging) {
+    addLog('Strategy Engine', '🔴 Trajectory alert parsed. Positioned: brand bundle discount.', '#ef4444');
+  } else {
+    addLog('Strategy Engine', `✅ Growth strategy compiled: ${strategy.strategy.primary.slice(0, 55)}...`, '#10b981');
+  }
 
   // 2. Marketing Engine
   addLog('Marketing Engine', `[Secure Key: ${MARKETING_ENGINE_API_KEY.slice(0, 12)}...] Generating 360 marketing strategies...`, '#06b6d4');
   const marketing = Marketing_Engine.run(businessData, customPrompt);
   outputs.marketing = marketing;
-  addLog('Marketing Engine', '✅ Campaign suite ready. 4-week content calendar generated.', '#10b981');
+  if (isLagging) {
+    addLog('Marketing Engine', '🔴 Campaigns updated: Active 35% flash discount promotion.', '#ef4444');
+  } else {
+    addLog('Marketing Engine', '✅ Campaign suite ready. 4-week content calendar generated.', '#10b981');
+  }
 
   // 3. Lead Gen Engine
   addLog('Lead Gen Engine', `[Secure Key: ${LEAD_GEN_ENGINE_API_KEY.slice(0, 12)}...] Building lead capture plans...`, '#ea580c');
   const leadgen = Lead_Gen_Engine.run(businessData, customPrompt);
   outputs.leadgen = leadgen;
-  addLog('Lead Gen Engine', `✅ Generated digital strategy & WhatsApp copies. Projected leads: ${leadgen.projected_leads}`, '#10b981');
+  addLog('Lead Gen Engine', `✅ WhatsApp lead gen copies calibrated. Conversion targets synced.`, '#10b981');
 
   // 4. Sales Engine
   addLog('Sales Engine', `[Secure Key: ${SALES_ENGINE_API_KEY.slice(0, 12)}...] Building sales funnel conversion protocol...`, '#10b981');
@@ -494,13 +501,13 @@ export function runAgentOrchestrator(businessData: BusinessData, customPrompt?: 
   addLog('Analytics Engine', `[Secure Key: ${ANALYTICS_ENGINE_API_KEY.slice(0, 12)}...] Running dashboards, forecasting & insights...`, '#3b82f6');
   const analytics = Analytics_Engine.run(businessData, customPrompt);
   outputs.analytics = analytics;
-  addLog('Analytics Engine', `✅ Forecasting ready. Revenue opportunity identified: $${analytics.revenue_opportunity.toLocaleString()}`, '#10b981');
+  addLog('Analytics Engine', `✅ Forecasting ready. Revenue opportunity identified.`, '#10b981');
 
   // 6. Customer Success Engine
   addLog('Customer Success Engine', `[Secure Key: ${CUSTOMER_SUCCESS_ENGINE_API_KEY.slice(0, 12)}...] Syncing CRM & CS Chatbot configs...`, '#ec4899');
   const cs = Customer_Success_Engine.run(businessData, customPrompt);
   outputs.cs = cs;
-  addLog('Customer Success Engine', `✅ CRM synchronized. Client health rating: ${cs.client_health}/100`, '#10b981');
+  addLog('Customer Success Engine', `✅ CRM synchronized. CS status online.`, '#10b981');
 
   // Final
   addLog('Strategy Engine', 'All 6 AI engine outputs successfully compiled. Layout updating...', '#8b5cf6');

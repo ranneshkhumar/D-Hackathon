@@ -32,7 +32,19 @@ function MetricCard({ title, value, sub, color = 'text-neutral-900', icon }: Met
 }
 
 export default function DashboardView() {
-  const { agentOutputs, businessData, onboarded } = useAegis();
+  const {
+    agentOutputs,
+    businessData,
+    onboarded,
+    targetRevenue,
+    timeframeDays,
+    daysRemaining,
+    startingCapital,
+    simulatedRevenue,
+    recentSalesTicks,
+    isLagging
+  } = useAegis();
+
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -78,7 +90,82 @@ export default function DashboardView() {
         </div>
         <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-full shrink-0">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          6 AI ENGINES OPERATIONAL
+          STARTUP ASSISTANT ONLINE
+        </div>
+      </div>
+
+      {/* 🎯 Live Goal Tracker */}
+      <div className="bg-white border border-neutral-200/80 rounded-2xl p-6 shadow-sm space-y-4">
+        <div className="flex justify-between items-start border-b border-neutral-100 pb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">🎯</span>
+            <div>
+              <h3 className="text-xs font-bold text-neutral-800 uppercase tracking-wide">Live Goal Tracker</h3>
+              <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5">Personal Assistant Live-Tracking Simulator</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 text-right">
+            <div>
+              <div className="text-[9px] font-bold text-neutral-400 uppercase">Days Remaining</div>
+              <div className="text-sm font-black text-neutral-700">{daysRemaining} / {timeframeDays} Days</div>
+            </div>
+            <div>
+              <div className="text-[9px] font-bold text-neutral-400 uppercase">Starting Capital</div>
+              <div className="text-sm font-black text-neutral-700">${startingCapital.toLocaleString()}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Progress Bar & Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+          <div className="md:col-span-3 space-y-2">
+            <div className="flex justify-between text-xs font-bold">
+              <span className="text-neutral-500">Current Simulated Revenue: <strong className="text-neutral-800">${simulatedRevenue.toLocaleString()}</strong></span>
+              <span className="text-neutral-500">Target Revenue Goal: <strong className="text-neutral-800">${targetRevenue.toLocaleString()}</strong></span>
+            </div>
+            <div className="h-3 w-full bg-neutral-100 rounded-full overflow-hidden relative">
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${
+                  isLagging ? 'bg-gradient-to-r from-red-500 to-orange-500' : 'bg-gradient-to-r from-emerald-500 to-teal-500'
+                }`}
+                style={{ width: `${Math.min(100, (simulatedRevenue / targetRevenue) * 100)}%` }}
+              />
+            </div>
+            <div className="text-[10px] text-neutral-400 font-medium flex justify-between">
+              <span>Expected Daily Rate: ${(targetRevenue / timeframeDays).toFixed(0)}/day</span>
+              <span>Progress: {((simulatedRevenue / targetRevenue) * 100).toFixed(1)}%</span>
+            </div>
+          </div>
+
+          {/* Lagging alert status */}
+          <div className="flex flex-col items-center justify-center p-3 rounded-xl border border-neutral-100 min-h-[70px] text-center bg-neutral-50/50">
+            {isLagging ? (
+              <div className="text-red-650 text-red-650 bg-red-50 border border-red-100 px-3 py-2 rounded-xl text-[11px] font-bold animate-pulse flex items-center gap-1">
+                <span className="w-2 h-2 bg-red-500 rounded-full shrink-0 animate-ping" />
+                <span>🔴 Lagging Behind Goal<br />Strategy Pivot Needed</span>
+              </div>
+            ) : (
+              <div className="text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-2 rounded-xl text-[11px] font-bold">
+                🟢 Trajectory Healthy <br /> Goal within reach
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Live Simulated Incoming Sales ticker */}
+        <div className="bg-neutral-50 border border-neutral-200/60 rounded-xl p-3.5 space-y-2">
+          <div className="text-[9px] font-bold text-neutral-400 uppercase flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+            Simulated Sales Ledger (Live Ticks)
+          </div>
+          <div className="space-y-1.5 max-h-[85px] overflow-y-auto custom-scrollbar">
+            {recentSalesTicks.map((tick, idx) => (
+              <div key={idx} className="flex gap-2 items-center text-[10px] font-mono text-neutral-500">
+                <span className="text-emerald-500 font-bold">✓</span>
+                <span>{tick}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -159,9 +246,13 @@ export default function DashboardView() {
         <span className="text-[10px] font-bold tracking-wider text-neutral-400 uppercase">Strategy Engine · Executive Brief</span>
         <div className="bg-white border border-neutral-200/80 rounded-2xl p-6 shadow-sm flex gap-4 items-start">
           <span className="text-3xl shrink-0">🧭</span>
-          <div className="space-y-2">
+          <div className="space-y-2 flex-1">
             <h4 className="text-xs font-bold text-neutral-700">Primary Positioning Strategy</h4>
-            <div className="text-xs font-medium text-blue-600 italic bg-blue-50/50 border border-blue-100 border-l-4 border-l-blue-500 rounded-xl px-4 py-3">
+            <div className={`text-xs font-medium italic border rounded-xl px-4 py-3 border-l-4 ${
+              isLagging
+                ? 'text-red-700 bg-red-50/50 border-red-200 border-l-red-500'
+                : 'text-blue-600 bg-blue-50/50 border-blue-100 border-l-blue-500'
+            }`}>
               &quot;{strategy.strategy.primary}&quot;
             </div>
             <p className="text-xs leading-relaxed text-neutral-500">
