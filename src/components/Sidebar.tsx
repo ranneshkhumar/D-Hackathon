@@ -11,7 +11,12 @@ import {
   Sparkles, 
   RotateCcw,
   Check,
-  Briefcase
+  Briefcase,
+  Layers,
+  LayoutDashboard,
+  Rocket,
+  Brain,
+  Network
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -21,6 +26,8 @@ interface SidebarProps {
   onSelectOrg: (id: string) => void;
   onCreateOrgClick: () => void;
   onResetWorkspace: () => void;
+  activeView: string;
+  onSelectView: (view: string) => void;
 }
 
 export default function Sidebar({ 
@@ -28,23 +35,23 @@ export default function Sidebar({
   activeOrg, 
   onSelectOrg, 
   onCreateOrgClick,
-  onResetWorkspace
+  onResetWorkspace,
+  activeView,
+  onSelectView
 }: SidebarProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const settingsRef = useRef<HTMLDivElement>(null);
 
-  // Dummy chats list
-  const dummyChats = [
-    { id: 'c1', title: 'Q3 Growth Blueprint' },
-    { id: 'c2', title: 'Marketing Funnel Optimization' },
-    { id: 'c3', title: 'Competitor Revenue Audit' },
-    { id: 'c4', title: 'Operational Automation Plan' },
-    { id: 'c5', title: 'Pricing & Unit Economics Model' }
+  // Aegis Navigation Items
+  const navItems = [
+    { id: 'dashboard', icon: <LayoutDashboard size={14} />, label: 'Executive Dashboard', phase: 'Dominate' },
+    { id: 'discovery', icon: <Rocket size={14} />, label: 'Discovery & Onboarding', phase: 'Discover' },
+    { id: 'boardroom', icon: <Brain size={14} />, label: 'Agent Boardroom', phase: 'Design & Deliver' },
+    { id: 'architecture', icon: <Network size={14} />, label: 'Architecture & Flows', phase: 'System' },
+    { id: 'chat', icon: <MessageSquare size={14} />, label: 'AI Copilot Chat', phase: 'Chat' },
   ];
-
-  const [activeDummyId, setActiveDummyId] = useState('c1');
 
   // Close menus on click outside
   useEffect(() => {
@@ -61,22 +68,22 @@ export default function Sidebar({
   }, []);
 
   return (
-    <aside className="w-64 h-screen flex flex-col bg-neutral-50 border-r border-neutral-200 relative z-30 select-none shrink-0">
+    <aside className="w-64 h-screen flex flex-col bg-white border-r border-neutral-200 relative z-30 select-none shrink-0">
       {/* Top Organization Switcher */}
       <div className="p-4 border-b border-neutral-200 relative z-40" ref={dropdownRef}>
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}
-          className="w-full flex items-center justify-between gap-2 p-2 rounded-xl bg-white border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50/50 transition-all text-left group shadow-sm"
+          className="w-full flex items-center justify-between gap-2 p-2 rounded-xl bg-white border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50/50 transition-all text-left group shadow-sm cursor-pointer"
         >
           <div className="flex items-center gap-2.5 overflow-hidden">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-50 text-orange-600 border border-orange-100 shrink-0">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 border border-blue-100 shrink-0">
               <Building2 size={14} />
             </div>
             <div className="overflow-hidden">
-              <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider leading-none mb-1">
-                Workspace
+              <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider leading-none mb-1">
+                Workspace Organization
               </p>
-              <h4 className="text-sm font-semibold text-neutral-700 truncate leading-none">
+              <h4 className="text-xs font-bold text-neutral-700 truncate leading-none">
                 {activeOrg ? activeOrg.name : 'Select Workspace'}
               </h4>
             </div>
@@ -95,7 +102,7 @@ export default function Sidebar({
               className="absolute left-4 right-4 mt-2 p-1.5 rounded-2xl bg-white border border-neutral-200 shadow-xl z-50 overflow-hidden"
             >
               <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-0.5">
-                <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider px-2 py-1.5 border-b border-neutral-100">
+                <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider px-2 py-1.5 border-b border-neutral-100">
                   Switch Workspace
                 </p>
                 {organizations.map((org) => (
@@ -105,9 +112,9 @@ export default function Sidebar({
                       onSelectOrg(org.id);
                       setDropdownOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between p-2 rounded-xl text-xs font-semibold transition-colors ${
+                    className={`w-full flex items-center justify-between p-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
                       activeOrg?.id === org.id
-                        ? 'bg-orange-50 text-orange-600 border border-orange-100/50'
+                        ? 'bg-blue-50 text-blue-600 border border-blue-100/50'
                         : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-800'
                     }`}
                   >
@@ -124,7 +131,7 @@ export default function Sidebar({
                     onCreateOrgClick();
                     setDropdownOpen(false);
                   }}
-                  className="w-full flex items-center gap-2 p-2 rounded-xl text-xs font-semibold text-orange-600 hover:bg-orange-50 transition-colors"
+                  className="w-full flex items-center gap-2 p-2 rounded-xl text-xs font-semibold text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
                 >
                   <Plus size={12} />
                   <span>Create Organization</span>
@@ -135,51 +142,63 @@ export default function Sidebar({
         </AnimatePresence>
       </div>
 
-      {/* Middle Previous Chats (Dummy Items) */}
+      {/* Middle Operations Navigation */}
       <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6 custom-scrollbar">
         <div>
-          <div className="flex items-center justify-between px-2 mb-2">
+          <div className="px-2 mb-2">
             <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
-              Previous Blueprints
+              Aegis Operations
             </span>
-            <span className="text-[9px] text-neutral-400 font-mono">Mock</span>
           </div>
 
-          <div className="space-y-0.5">
-            {dummyChats.map((chat) => (
+          <div className="space-y-1">
+            {navItems.map((item) => (
               <button
-                key={chat.id}
-                onClick={() => setActiveDummyId(chat.id)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-left transition-all ${
-                  activeDummyId === chat.id
-                    ? 'bg-white text-neutral-800 border-l-2 border-orange-500 shadow-sm'
-                    : 'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800'
+                key={item.id}
+                onClick={() => onSelectView(item.id)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-left transition-all cursor-pointer ${
+                  activeView === item.id
+                    ? 'bg-neutral-100 text-neutral-800 shadow-sm border border-neutral-200/50'
+                    : 'text-neutral-500 hover:bg-neutral-50 hover:text-neutral-800'
                 }`}
               >
-                <MessageSquare size={13} className={activeDummyId === chat.id ? 'text-orange-500' : 'text-neutral-400'} />
-                <span className="truncate">{chat.title}</span>
+                <div className="flex items-center gap-2.5">
+                  <span className={activeView === item.id ? 'text-blue-500' : 'text-neutral-400'}>
+                    {item.icon}
+                  </span>
+                  <span>{item.label}</span>
+                </div>
+                <span className="text-[8px] font-extrabold tracking-wider uppercase text-neutral-400 bg-neutral-100 px-1.5 py-0.5 rounded-lg border border-neutral-200/40">
+                  {item.phase}
+                </span>
               </button>
             ))}
           </div>
         </div>
 
         {/* Future Integration Architecture */}
-        <div className="px-2 pt-2 border-t border-neutral-200">
+        <div className="px-2 pt-2 border-t border-neutral-200/80">
           <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block mb-2">
-            Workspace Intelligence
+            Boardroom Hubs
           </span>
           <div className="space-y-1.5">
-            {['CEO Hub', 'Marketing Hub', 'Sales Hub', 'Finance Hub', 'Operations Hub'].map((hub) => (
+            {[
+              { name: 'CEO Hub', color: 'text-blue-500 bg-blue-50/50 border-blue-100' },
+              { name: 'Strategy Hub', color: 'text-violet-500 bg-violet-50/50 border-violet-100' },
+              { name: 'Marketing Hub', color: 'text-cyan-500 bg-cyan-50/50 border-cyan-100' },
+              { name: 'Sales Hub', color: 'text-emerald-500 bg-emerald-50/50 border-emerald-100' },
+              { name: 'Finance Hub', color: 'text-orange-500 bg-orange-50/50 border-orange-100' },
+            ].map((hub) => (
               <div
-                key={hub}
-                className="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-white border border-neutral-200 text-[10px] text-neutral-600 shadow-sm"
+                key={hub.name}
+                className={`flex items-center justify-between px-2.5 py-1.5 rounded-xl border text-[10px] font-semibold text-neutral-600 shadow-sm ${hub.color}`}
               >
                 <div className="flex items-center gap-1.5">
-                  <Briefcase size={10} className="text-neutral-400" />
-                  <span>{hub}</span>
+                  <Briefcase size={10} className="opacity-75" />
+                  <span>{hub.name}</span>
                 </div>
-                <span className="text-[9px] font-mono text-neutral-400 bg-neutral-50 px-1 py-0.5 rounded uppercase leading-none border border-neutral-100">
-                  Simulated
+                <span className="text-[8px] font-mono opacity-75 uppercase leading-none">
+                  Active
                 </span>
               </div>
             ))}
@@ -192,20 +211,20 @@ export default function Sidebar({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="h-6 w-6 rounded-full bg-white border border-neutral-200 flex items-center justify-center shadow-sm">
-              <Sparkles size={11} className="text-orange-500" />
+              <Sparkles size={11} className="text-blue-500 animate-pulse" />
             </div>
             <div className="leading-none">
               <span className="text-xs font-bold text-neutral-700 block">
-                Business OS
+                Aegis OS
               </span>
               <span className="text-[9px] text-neutral-400 block mt-0.5 font-mono">
-                v1.0.0 (Beta)
+                v1.2.0 (React)
               </span>
             </div>
           </div>
           <button
             onClick={() => setSettingsOpen(!settingsOpen)}
-            className={`p-2 rounded-xl border border-neutral-200 bg-white text-neutral-400 hover:text-neutral-600 hover:border-neutral-300 transition-colors shadow-sm ${
+            className={`p-2 rounded-xl border border-neutral-200 bg-white text-neutral-400 hover:text-neutral-600 hover:border-neutral-300 transition-colors shadow-sm cursor-pointer ${
               settingsOpen ? 'text-neutral-600 border-neutral-300' : ''
             }`}
           >
@@ -223,7 +242,7 @@ export default function Sidebar({
               transition={{ duration: 0.15 }}
               className="absolute bottom-16 left-4 right-4 p-2 rounded-2xl bg-white border border-neutral-200 shadow-xl z-50 space-y-1"
             >
-              <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider px-2 py-1">
+              <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider px-2 py-1">
                 Admin Panel
               </p>
               <div className="text-[10px] text-neutral-400 px-2 pb-2 leading-relaxed border-b border-neutral-100">
@@ -234,7 +253,7 @@ export default function Sidebar({
                   onResetWorkspace();
                   setSettingsOpen(false);
                 }}
-                className="w-full flex items-center gap-2 p-2 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
+                className="w-full flex items-center gap-2 p-2 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
               >
                 <RotateCcw size={12} />
                 <span>Reset Demo (Clear Org)</span>

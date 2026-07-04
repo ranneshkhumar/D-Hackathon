@@ -1,41 +1,37 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# ── Python / Streamlit ──────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.so
+.env
+.venv
+env/
+venv/
+.python-version
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# ── React / Node ────────────────────────────────────────
+node_modules/
+.next/
+out/
+aegis-react/node_modules/
+aegis-react/dist/
+aegis-react/.vite/
+aegis-react/.env
+aegis-react/.env.local
+aegis-react/.env.production
 
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
+# ── OS / Editor ─────────────────────────────────────────
 .DS_Store
-*.pem
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/settings.json
 
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# ── Misc ────────────────────────────────────────────────
+task.md
