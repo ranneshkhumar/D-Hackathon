@@ -8,5 +8,6 @@ const router = Router();
 router.use(authMiddleware);
 
 router.post('/', StrategyController.generate);
+router.get('/', StrategyController.getLatest);
 
 export const strategyRouter = router;

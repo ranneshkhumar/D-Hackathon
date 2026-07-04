@@ -1,0 +1,403 @@
+'use client';
+
+import React, { createContext, useContext, useReducer, useEffect, ReactNode, useState } from 'react';
+import { runAgentOrchestrator, DEFAULT_BUSINESS, BusinessData, AgentOutputs, LogEntry } from '../engine/agents';
+import { OrgManager } from '@/services/org-manager';
+import { ApiClient } from '@/services/api-client';
+
+export interface AegisState {
+  businessData: BusinessData | null;
+  agentOutputs: AgentOutputs | null;
+  agentLog: LogEntry[];
+  onboarded: boolean;
+  runComplete: boolean;
+  isRunning: boolean;
+}
+
+export interface CopilotMessage {
+  role: 'user' | 'assistant';
+  text: string;
+  timestamp: string;
+}
+
+type Action =
+  | { type: 'INIT_DEFAULT'; businessData: BusinessData; agentOutputs: AgentOutputs; agentLog: LogEntry[] }
+  | { type: 'SET_RUNNING' }
+  | { type: 'RUN_COMPLETE'; businessData: BusinessData; agentOutputs: AgentOutputs; agentLog: LogEntry[] };
+
+const initialState: AegisState = {
+  businessData: null,
+  agentOutputs: null,
+  agentLog: [],
+  onboarded: false,
+  runComplete: false,
+  isRunning: false,
+};
+
+function aegisReducer(state: AegisState, action: Action): AegisState {
+  switch (action.type) {
+    case 'INIT_DEFAULT':
+      return {
+        ...state,
+        businessData: action.businessData,
+        agentOutputs: action.agentOutputs,
+        agentLog: action.agentLog,
+        onboarded: true,
+        runComplete: true,
+        isRunning: false,
+      };
+    case 'SET_RUNNING':
+      return { ...state, isRunning: true };
+    case 'RUN_COMPLETE':
+      return {
+        ...state,
+        businessData: action.businessData,
+        agentOutputs: action.agentOutputs,
+        agentLog: action.agentLog,
+        onboarded: true,
+        runComplete: true,
+        isRunning: false,
+      };
+    default:
+      return state;
+  }
+}
+
+interface ContextProps extends AegisState {
+  runOrchestrator: (businessData: BusinessData) => void;
+  copilotOpen: boolean;
+  setCopilotOpen: (open: boolean) => void;
+  copilotMessages: CopilotMessage[];
+  runCopilotPrompt: (prompt: string) => void;
+}
+
+const AegisContext = createContext<ContextProps | null>(null);
+
+export function AegisProvider({ children }: { children: ReactNode }) {
+  const [state, dispatch] = useReducer(aegisReducer, initialState);
+  const [copilotOpen, setCopilotOpen] = useState(false);
+  const [copilotMessages, setCopilotMessages] = useState<CopilotMessage[]>([]);
+
+  // Sync / initialize on client mount
+  useEffect(() => {
+    const initializeAegis = async () => {
+      const active = OrgManager.getActiveOrganization();
+      if (!active) {
+        // Fallback to default templates
+        const { outputs, log } = runAgentOrchestrator(DEFAULT_BUSINESS);
+        dispatch({
+          type: 'INIT_DEFAULT',
+          businessData: DEFAULT_BUSINESS,
+          agentOutputs: outputs,
+          agentLog: log,
+        });
+        setCopilotMessages([
+          {
+            role: 'assistant',
+            text: 'Greetings. I am the Master Executive Copilot. Ask me to coordinate any strategic objective down to the CEO, Marketing, Strategy, Sales, and Finance units.',
+            timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
+          }
+        ]);
+        return;
+      }
+
+      const savedDataKey = `aegis_business_data_${active.id}`;
+      const savedDataRaw = localStorage.getItem(savedDataKey);
+      if (savedDataRaw) {
+        try {
+          const customData = JSON.parse(savedDataRaw);
+          
+          // 1. Load calculated onboarding metrics/KPIs summary
+          let onboardingKpis: any = null;
+          try {
+            const summaryRes = await ApiClient.getDashboardSummary(active.id);
+            if (summaryRes && summaryRes.success) {
+              onboardingKpis = summaryRes.summary;
+            }
+          } catch (e) {}
+
+          // 2. Try loading latest database strategy findings
+          try {
+            const backendRes = await ApiClient.getLatestStrategy(active.id);
+            if (backendRes && backendRes.success) {
+              const outputs = formatBackendOutputs(backendRes);
+              const log = buildLogsFromBackend(backendRes);
+              
+              if (onboardingKpis) {
+                outputs.ceo.health_score = onboardingKpis.businessHealthScore || outputs.ceo.health_score;
+                outputs.ceo.growth_score = onboardingKpis.growthScore || outputs.ceo.growth_score;
+              }
+
+              dispatch({
+                type: 'INIT_DEFAULT',
+                businessData: customData,
+                agentOutputs: outputs,
+                agentLog: log,
+              });
+              setCopilotMessages([
+                {
+                  role: 'assistant',
+                  text: 'Welcome back. I have successfully reloaded your strategic workspace context directly from Neon PostgreSQL.',
+                  timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
+                }
+              ]);
+              return;
+            }
+          } catch (err) {
+            console.warn('[AegisContext] Failed to load strategy from backend, falling back:', err);
+          }
+
+          // 3. Fallback to local simulation
+          const { outputs, log } = runAgentOrchestrator(customData);
+          if (onboardingKpis) {
+            outputs.ceo.health_score = onboardingKpis.businessHealthScore || outputs.ceo.health_score;
+            outputs.ceo.growth_score = onboardingKpis.growthScore || outputs.ceo.growth_score;
+          }
+
+          dispatch({
+            type: 'INIT_DEFAULT',
+            businessData: customData,
+            agentOutputs: outputs,
+            agentLog: log,
+          });
+          setCopilotMessages([
+            {
+              role: 'assistant',
+              text: 'Greetings. I am the Master Executive Copilot. Ask me to coordinate any strategic objective down to the CEO, Marketing, Strategy, Sales, and Finance units.',
+              timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
+            }
+          ]);
+        } catch (e) {
+          console.error('Failed to parse saved business data:', e);
+        }
+      }
+    };
+
+    initializeAegis();
+  }, []);
+
+  const runOrchestrator = async (businessData: BusinessData) => {
+    dispatch({ type: 'SET_RUNNING' });
+    const active = OrgManager.getActiveOrganization();
+    
+    if (active) {
+      try {
+        const backendRes = await ApiClient.executeAgentStrategy(active.id);
+        if (backendRes && backendRes.success) {
+          const outputs = formatBackendOutputs(backendRes);
+          const log = buildLogsFromBackend(backendRes);
+          dispatch({ type: 'RUN_COMPLETE', businessData, agentOutputs: outputs, agentLog: log });
+          return;
+        }
+      } catch (e) {
+        console.warn('[AegisContext] Backend execution failed, running fallback simulation:', e);
+      }
+    }
+
+    setTimeout(() => {
+      const { outputs, log } = runAgentOrchestrator(businessData);
+      dispatch({ type: 'RUN_COMPLETE', businessData, agentOutputs: outputs, agentLog: log });
+    }, 100);
+  };
+
+  const runCopilotPrompt = async (prompt: string) => {
+    if (!state.businessData) return;
+    const userMsg: CopilotMessage = {
+      role: 'user',
+      text: prompt,
+      timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
+    };
+    setCopilotMessages(prev => [...prev, userMsg]);
+    dispatch({ type: 'SET_RUNNING' });
+
+    const active = OrgManager.getActiveOrganization();
+    if (active) {
+      try {
+        const backendRes = await ApiClient.executeAgentStrategy(active.id, prompt);
+        if (backendRes && backendRes.success) {
+          const outputs = formatBackendOutputs(backendRes);
+          const log = buildLogsFromBackend(backendRes);
+          dispatch({ type: 'RUN_COMPLETE', businessData: state.businessData!, agentOutputs: outputs, agentLog: log });
+
+          const assistantMsg: CopilotMessage = {
+            role: 'assistant',
+            text: `### 🤖 Live Copilot Run Complete\n\nI have successfully executed the strategy query on the PostgreSQL database and Google Gemini API for: **"${prompt}"**.\n\nAll metrics, pipeline conversion weights, and priorities have been updated dynamically across the command center view.`,
+            timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
+          };
+          setCopilotMessages(prev => [...prev, assistantMsg]);
+          return;
+        }
+      } catch (e) {
+        console.warn('[AegisContext] Backend copilot call failed, using fallback:', e);
+      }
+    }
+
+    setTimeout(() => {
+      const { outputs, log } = runAgentOrchestrator(state.businessData!, prompt);
+      dispatch({ type: 'RUN_COMPLETE', businessData: state.businessData!, agentOutputs: outputs, agentLog: log });
+
+      const assistantMsg: CopilotMessage = {
+        role: 'assistant',
+        text: `### 🤖 Sandbox Copilot Plan Executed\n\nI have parsed your request: **"${prompt}"** and orchestrated the local simulated agents.\n\nAll metrics and priorities have been updated locally.`,
+        timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
+      };
+      setCopilotMessages(prev => [...prev, assistantMsg]);
+    }, 1200);
+  };
+
+  return (
+    <AegisContext.Provider
+      value={{
+        ...state,
+        runOrchestrator,
+        copilotOpen,
+        setCopilotOpen,
+        copilotMessages,
+        runCopilotPrompt,
+      }}
+    >
+      {children}
+    </AegisContext.Provider>
+  );
+}
+
+function formatBackendOutputs(backendRes: any): AgentOutputs {
+  const f = backendRes.findings || {};
+  const s = backendRes.strategy || {};
+  const e = backendRes.executiveReport || {};
+
+  const fFinance = f.Finance?.rawJson || {};
+  const fMarketing = f.Marketing?.rawJson || {};
+  const fSales = f.Sales?.rawJson || {};
+  const fCS = f.CustomerSuccess?.rawJson || {};
+
+  return {
+    ceo: {
+      summary: e.executiveSummary || 'Boardroom audit complete.',
+      health_score: e.overallHealthScore || 82,
+      growth_score: e.businessGrowthScore || 75,
+      mandate: (e.strategicPriorities || []).join(' | '),
+      timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
+    },
+    strategy: {
+      strategy: {
+        primary: s.strategicObjectives?.[0] || 'Expand corporate channels',
+        pillars: s.strategicObjectives || ['Renegotiate wholesale vendor terms'],
+        kpis: {
+          'Target ROI': '3.5x',
+          'Sales Velocity': '14 days'
+        },
+        markets: ['Domestic Tier 1', 'Corporate Parks'],
+        competitive_moat: 'Organic certified with zero sugar crash formulation'
+      },
+      growth_projection: {
+        Q1: 15,
+        Q2: 28,
+        Q3: 45,
+        Q4: 65
+      },
+      mandate: f.Strategy?.summary || 'Roadmap generated.',
+      timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
+    },
+    marketing: {
+      campaigns: {
+        hero_ad: fMarketing.landingPageHooks?.[0] || 'Say goodbye to fatigue. Try our organic infusions.',
+        email_subject: 'Better energy for {{company_name}} teams',
+        email_body: 'Hi {{first_name}},\n\nI noticed you manage operations at {{company_name}}...',
+        channels: Object.values(fMarketing.channelBreakdown || { p: 'Instagram Social' }) as string[],
+        hook: fMarketing.landingPageHooks?.[1] || 'Premium wellness energy boosters for office teams.'
+      },
+      content_calendar: [
+        { week: 'Week 1', content: 'Launch wellness video hook', channel: 'Instagram' },
+        { week: 'Week 2', content: 'Email newsletter campaign', channel: 'Newsletter' },
+        { week: 'Week 3', content: 'Publish corporate gift blog', channel: 'SEO' }
+      ],
+      timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
+    },
+    sales: {
+      pipeline: [
+        { stage: 'Prospecting', conversion: '100%', avg_days: 3, action: 'Auto email' },
+        { stage: 'Proposal', conversion: fSales.salesFunnelConversionMap?.cartToCheckout || '32%', avg_days: 5, action: 'Follow up call' },
+        { stage: 'Negotiation', conversion: fSales.salesFunnelConversionMap?.checkoutToPurchase || '84%', avg_days: 4, action: 'Offer discount' }
+      ],
+      outbound_sequence: [
+        { day: 'Day 1', touch: 'Email outreach', goal: 'Introduce brand' },
+        { day: 'Day 3', touch: 'LinkedIn message', goal: 'Schedule meeting' },
+        { day: 'Day 5', touch: 'Follow-up email', goal: 'Handle objections' }
+      ],
+      discovery_script: fSales.outboundEmailScript || 'Cold email script template.',
+      lead_score_criteria: [
+        { factor: 'Industry alignment', weight: '40%', score_range: 'High fit' },
+        { factor: 'Annual revenue scale', weight: '30%', score_range: 'MSME' },
+        { factor: 'Employee count size', weight: '30%', score_range: 'Growing team' }
+      ],
+      revenue_opportunity: s.opportunityValue || 85000,
+      lead_score: 74,
+      timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
+    },
+    finance: {
+      risk_alerts: (fFinance.burnRateAlerts || []).map((alert: string) => ({
+        level: 'amber',
+        title: 'Overhead Alert',
+        desc: alert
+      })) as RiskAlert[],
+      cash_flow: [
+        { month: 'Month 1', value: fFinance.monthlyRevenue || 350000 },
+        { month: 'Month 2', value: (fFinance.monthlyRevenue || 350000) * 1.15 },
+        { month: 'Month 3', value: (fFinance.monthlyRevenue || 350000) * 1.3 }
+      ],
+      customer_health: fCS.userSatisfactionScore || 88,
+      market_readiness: 72,
+      unit_economics: {
+        CAC: `₹${fFinance.cac || 2500}`,
+        LTV: `₹${fFinance.ltv || 15000}`,
+        'LTV:CAC Ratio': fFinance.cacToLtvRatio || '1:6',
+        'Payback Period': '1.2 months',
+        'Gross Margin': `${fFinance.profitMargin || 31}%`,
+        'Burn Multiple': '1.1x'
+      },
+      timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
+    }
+  };
+}
+
+interface RiskAlert {
+  level: 'red' | 'amber' | 'green';
+  title: string;
+  desc: string;
+}
+
+function buildLogsFromBackend(backendRes: any): LogEntry[] {
+  const logs: LogEntry[] = [];
+  const findings = backendRes.findings || {};
+  
+  logs.push({ 
+    time: new Date().toLocaleTimeString('en-US', { hour12: false }), 
+    agent: 'System', 
+    message: 'Orchestrating multi-agent boardroom alignment...',
+    color: 'text-neutral-500'
+  });
+  
+  Object.keys(findings).forEach(agentName => {
+    logs.push({
+      time: new Date().toLocaleTimeString('en-US', { hour12: false }),
+      agent: agentName,
+      message: findings[agentName].summary || `Completed domain analysis for ${agentName}.`,
+      color: 'text-orange-500'
+    });
+  });
+
+  logs.push({ 
+    time: new Date().toLocaleTimeString('en-US', { hour12: false }), 
+    agent: 'System', 
+    message: 'Boardroom strategic consolidation complete.',
+    color: 'text-emerald-500'
+  });
+  return logs;
+}
+
+export function useAegis() {
+  const ctx = useContext(AegisContext);
+  if (!ctx) throw new Error('useAegis must be used within AegisProvider');
+  return ctx;
+}

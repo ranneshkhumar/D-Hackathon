@@ -50,11 +50,30 @@ export const OrgManager = {
       id: 'org_' + Math.random().toString(36).substring(2, 11),
       name,
       createdAt: new Date().toISOString(),
+      onboarded: false,
     };
     state.organizations.push(newOrg);
     state.activeOrganizationId = newOrg.id;
     this.saveOrgState(state);
     return newOrg;
+  },
+
+  deleteOrganization(id: string): void {
+    const state = this.getOrgState();
+    state.organizations = state.organizations.filter(org => org.id !== id);
+    if (state.activeOrganizationId === id) {
+      state.activeOrganizationId = state.organizations.length > 0 ? state.organizations[0].id : null;
+    }
+    this.saveOrgState(state);
+  },
+
+  setOnboarded(id: string, onboarded: boolean): void {
+    const state = this.getOrgState();
+    const org = state.organizations.find(o => o.id === id);
+    if (org) {
+      org.onboarded = onboarded;
+      this.saveOrgState(state);
+    }
   },
 
   setActiveOrganization(id: string): void {

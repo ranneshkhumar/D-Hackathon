@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { OrgManager } from '@/services/org-manager';
+import { ApiClient } from '@/services/api-client';
 import { Organization } from '@/types';
 import Sidebar from '@/components/Sidebar';
 import EmptyState from '@/components/EmptyState';
@@ -26,8 +27,7 @@ function WorkspaceContent() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [activeView, setActiveView] = useState('dashboard');
-
-  const { copilotOpen, setCopilotOpen, copilotMessages, runCopilotPrompt, isRunning } = useAegis();
+  const { runOrchestrator, copilotOpen, setCopilotOpen, copilotMessages, runCopilotPrompt, isRunning } = useAegis();
   const [copilotInput, setCopilotInput] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -51,22 +51,90 @@ function WorkspaceContent() {
     }
   }, [copilotMessages, copilotOpen]);
 
-  // Switch organizations inside the workspace
+  // Redirect to onboarding if organization is not onboarded
+  useEffect(() => {
+    if (activeOrg) {
+      if (activeOrg.onboarded !== true) {
+        router.push(`/onboarding?name=${encodeURIComponent(activeOrg.name)}`);
+      } else {
+        setActiveView('dashboard');
+      }
+    }
+  }, [activeOrg?.id, activeOrg?.onboarded]);
+
+  // Switch organizations inside the workspace and re-run orchestrator context
   const handleSelectOrg = (id: string) => {
     OrgManager.setActiveOrganization(id);
     refreshState();
+    
+    if (typeof window !== 'undefined') {
+      const savedDataRaw = localStorage.getItem(`aegis_business_data_${id}`);
+      if (savedDataRaw) {
+        try {
+          const data = JSON.parse(savedDataRaw);
+          runOrchestrator(data);
+          return;
+        } catch (e) {
+          console.error('Failed to load custom organization data:', e);
+        }
+      }
+    }
+    // Fallback to default template context
+    const DEFAULT_BUSINESS = {
+      company_name: 'Aura Wellness',
+      industry: 'Technology',
+      annual_revenue: 500000,
+      target_audience: 'Mid-market B2B SaaS',
+      primary_goal: 'Increase Revenue & ARR',
+      team_size: '1–10 (Startup)',
+      doc_text: '',
+    };
+    runOrchestrator(DEFAULT_BUSINESS);
   };
 
-  // Triggers the simulated workspace initialization
-  const handleCreateOrg = (name: string) => {
+  // Triggers workspace creation by redirecting to onboarding discovery wizard
+  const handleCreateOrg = async (name: string) => {
     setIsModalOpen(false);
-    // Route to initializing sequence with name parameter
-    router.push(`/initializing?name=${encodeURIComponent(name)}`);
+    
+    // 1. Create locally first
+    let org = OrgManager.createOrganization(name);
+    
+    // 2. Try creating on backend database
+    try {
+      const backendOrgRes = await ApiClient.createOrganization(name);
+      if (backendOrgRes && backendOrgRes.organization) {
+        const backendOrg = backendOrgRes.organization;
+        
+        org = {
+          id: backendOrg.id,
+          name: backendOrg.name,
+          createdAt: backendOrg.createdAt,
+          onboarded: false
+        };
+        
+        const state = OrgManager.getOrgState();
+        state.organizations = state.organizations.filter(o => o.id !== state.activeOrganizationId);
+        state.organizations.push(org);
+        state.activeOrganizationId = org.id;
+        OrgManager.saveOrgState(state);
+      }
+    } catch (e) {
+      console.warn('[Workspace] Failed to sync workspace organization with database, using local fallback:', e);
+    }
+    
+    refreshState();
+    router.push(`/onboarding?name=${encodeURIComponent(name)}`);
   };
 
   // Reset the demo workspace helper (clears localStorage so user can re-test empty state)
   const handleResetWorkspace = () => {
     OrgManager.clearAll();
+    refreshState();
+  };
+
+  // Handle organization deletion
+  const handleDeleteOrg = (id: string) => {
+    OrgManager.deleteOrganization(id);
     refreshState();
   };
 
@@ -105,8 +173,6 @@ function WorkspaceContent() {
     switch (activeView) {
       case 'dashboard':
         return <DashboardView />;
-      case 'discovery':
-        return <DiscoveryView onSuccessRedirect={() => setActiveView('dashboard')} />;
       case 'boardroom':
         return <BoardroomView />;
       case 'architecture':
@@ -129,6 +195,7 @@ function WorkspaceContent() {
         onResetWorkspace={handleResetWorkspace}
         activeView={activeView}
         onSelectView={setActiveView}
+        onDeleteOrg={handleDeleteOrg}
       />
       
       {/* Main View Shell */}
@@ -207,7 +274,9 @@ function WorkspaceContent() {
                         {isUser ? (
                           <p>{msg.text}</p>
                         ) : (
-                          <ReactMarkdown className="markdown-body text-[11.5px]">{msg.text}</ReactMarkdown>
+                          <div className="markdown-body text-[11.5px]">
+                            <ReactMarkdown>{msg.text}</ReactMarkdown>
+                          </div>
                         )}
                       </div>
                       <span className="text-[9px] text-neutral-300 font-mono mt-1 px-1">

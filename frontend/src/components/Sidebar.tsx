@@ -16,7 +16,9 @@ import {
   LayoutDashboard,
   Rocket,
   Brain,
-  Network
+  Network,
+  Lock,
+  Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -28,6 +30,7 @@ interface SidebarProps {
   onResetWorkspace: () => void;
   activeView: string;
   onSelectView: (view: string) => void;
+  onDeleteOrg: (id: string) => void;
 }
 
 export default function Sidebar({ 
@@ -37,7 +40,8 @@ export default function Sidebar({
   onCreateOrgClick,
   onResetWorkspace,
   activeView,
-  onSelectView
+  onSelectView,
+  onDeleteOrg
 }: SidebarProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -47,7 +51,6 @@ export default function Sidebar({
   // Aegis Navigation Items
   const navItems = [
     { id: 'dashboard', icon: <LayoutDashboard size={14} />, label: 'Executive Dashboard', phase: 'Dominate' },
-    { id: 'discovery', icon: <Rocket size={14} />, label: 'Discovery & Onboarding', phase: 'Discover' },
     { id: 'boardroom', icon: <Brain size={14} />, label: 'Agent Boardroom', phase: 'Design & Deliver' },
     { id: 'architecture', icon: <Network size={14} />, label: 'Architecture & Flows', phase: 'System' },
     { id: 'chat', icon: <MessageSquare size={14} />, label: 'AI Copilot Chat', phase: 'Chat' },
@@ -106,21 +109,34 @@ export default function Sidebar({
                   Switch Workspace
                 </p>
                 {organizations.map((org) => (
-                  <button
+                  <div
                     key={org.id}
-                    onClick={() => {
-                      onSelectOrg(org.id);
-                      setDropdownOpen(false);
-                    }}
-                    className={`w-full flex items-center justify-between p-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                    className={`w-full flex items-center justify-between p-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       activeOrg?.id === org.id
                         ? 'bg-blue-50 text-blue-600 border border-blue-100/50'
                         : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-800'
                     }`}
+                    onClick={() => {
+                      onSelectOrg(org.id);
+                      setDropdownOpen(false);
+                    }}
                   >
                     <span className="truncate pr-2">{org.name}</span>
-                    {activeOrg?.id === org.id && <Check size={12} />}
-                  </button>
+                    <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      {activeOrg?.id === org.id && <Check size={12} />}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (confirm(`Are you sure you want to delete organization "${org.name}"?`)) {
+                            onDeleteOrg(org.id);
+                          }
+                        }}
+                        className="p-1 hover:bg-red-50 text-neutral-400 hover:text-red-500 rounded transition-colors"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  </div>
                 ))}
               </div>
 
@@ -151,7 +167,6 @@ export default function Sidebar({
             </span>
           </div>
 
-          <div className="space-y-1">
             {navItems.map((item) => (
               <button
                 key={item.id}
@@ -173,7 +188,6 @@ export default function Sidebar({
                 </span>
               </button>
             ))}
-          </div>
         </div>
 
         {/* Future Integration Architecture */}

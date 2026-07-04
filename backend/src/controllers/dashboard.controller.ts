@@ -1,12 +1,10 @@
 import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { OrgRepository } from '../repositories/org.repository';
-import { SessionRepository } from '../repositories/session.repository';
 
 export class DashboardController {
   /**
-   * Compiles the 9 required Business Intelligence metrics/sections.
-   * Reads from logs and latest analyses, falling back to clean computed defaults.
+   * Compiles the dynamic organization metrics from the PostgreSQL database.
    */
   static async getSummary(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
@@ -16,52 +14,34 @@ export class DashboardController {
         return res.status(400).json({ error: 'Organization ID query parameter is required' });
       }
 
-      // Fetch org details & metrics
       const org = await OrgRepository.findById(organizationId);
       if (!org) {
         return res.status(404).json({ error: 'Organization not found' });
       }
 
-      // Fetch latest AI reports
-      const analyses = await SessionRepository.getAIAnalyses(organizationId);
-      const latestStrategy = analyses.find(a => a.analysisType === 'STRATEGY');
-      const latestExecSummary = analyses.find(a => a.analysisType === 'EXEC_SUMMARY');
+      const kpis = org.kpiMetrics;
 
-      // Default fallback indicators if no analysis has run yet
-      const healthScore = 84;
-      const growthScore = 72;
-      const revenueOpportunity = '$145,000 potential optimization value';
-      const leadScore = 78;
-      const customerHealth = 91;
-      const marketReadiness = 'Ready - Strong positioning opportunity';
-      
-      const aiRecommendations = [
-        'Initialize Marketing Agent to scale outreach campaigns.',
-        'Address overhead cost spikes flagged by Finance Agent.'
-      ];
-      const riskAlerts = [
-        'Moderate conversion velocity delays noted in Q2 sales reports.'
-      ];
-      const executiveSummary = `Workspace '${org.name}' initialized. Operational benchmarks ready for Agentic Business analysis.`;
-
-      // Extract results from DB records if available
+      // Extract calculated metric parameters from database
       const payload = {
-        businessHealthScore: healthScore,
-        growthScore: growthScore,
-        revenueOpportunity: revenueOpportunity,
-        leadScore: leadScore,
-        customerHealth: customerHealth,
-        marketReadiness: marketReadiness,
-        aiRecommendations: aiRecommendations,
-        riskAlerts: riskAlerts,
-        executiveSummary: executiveSummary,
-        rawAnalysis: {
-          strategy: latestStrategy?.results || null,
-          execSummary: latestExecSummary?.results || null
-        }
+        businessHealthScore: kpis?.businessHealthScore || 80,
+        growthScore: kpis?.growthScore || 70,
+        revenueOpportunity: kpis?.revenueOpportunity ? `₹${Number(kpis.revenueOpportunity).toLocaleString('en-IN')}` : '₹0',
+        leadScore: kpis?.leadScore || 60,
+        customerHealth: kpis?.customerHealth || 80,
+        marketReadiness: kpis?.marketReadiness ? `${kpis.marketReadiness}% readiness` : '75% readiness',
+        riskScore: kpis?.riskScore || 0,
+        executiveSummary: kpis?.executiveSummary || 'Workspace initialized. Run the agent boardroom to compile executive findings.',
+        riskAlerts: kpis?.riskScore && kpis.riskScore > 0 ? ['Identified operational cash burn rate risks.'] : [],
+        aiRecommendations: [
+          'Address marketing channel ROI allocations to reduce CAC.',
+          'Optimize sales qualification workflows to improve close ratios.'
+        ]
       };
 
-      return res.status(200).json(payload);
+      return res.status(200).json({
+        success: true,
+        summary: payload
+      });
     } catch (error) {
       next(error);
     }

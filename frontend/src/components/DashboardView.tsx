@@ -8,7 +8,7 @@ import {
   BarChart, Bar,
   AreaChart, Area,
 } from 'recharts';
-import { ShieldAlert, TrendingUp, Cpu, Award, Zap, AlertTriangle, AlertCircle, DollarSign, Activity, Target, Landmark, Percent, RefreshCw } from 'lucide-react';
+import { ShieldAlert, TrendingUp, Cpu, Award, Zap, AlertTriangle, AlertCircle, IndianRupee, Activity, Target, Landmark, Percent, RefreshCw } from 'lucide-react';
 
 interface MetricProps {
   title: string;
@@ -98,8 +98,8 @@ export default function DashboardView() {
         />
         <MetricCard
           title="Projected Q4 Revenue"
-          value={`$${(strategy.growth_projection.Q4 / 1000).toFixed(0)}K`}
-          sub={`+47% vs baseline $${(businessData.annual_revenue / 1000).toFixed(0)}K`}
+          value={`₹${(strategy.growth_projection.Q4 / 1000).toFixed(0)}K`}
+          sub={`+47% vs baseline ₹${(businessData.annual_revenue / 1000).toFixed(0)}K`}
           color="text-blue-600"
           icon={<TrendingUp size={16} />}
         />
@@ -121,10 +121,10 @@ export default function DashboardView() {
         />
         <MetricCard
           title="Revenue Opportunity"
-          value={`$${(sales.revenue_opportunity / 1000).toFixed(0)}K`}
+          value={`₹${(sales.revenue_opportunity / 1000).toFixed(0)}K`}
           sub="Identified by Sales Agent"
           color="text-emerald-600"
-          icon={<DollarSign size={16} />}
+          icon={<IndianRupee size={16} />}
         />
         <MetricCard
           title="Growth Score"
@@ -188,8 +188,8 @@ export default function DashboardView() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f5" />
                 <XAxis dataKey="quarter" tick={{ fontSize: 10, fill: '#86868b' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#86868b' }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v/1000).toFixed(0)}K`} />
-                <Tooltip formatter={(value: number | string) => [`$${Number(value).toLocaleString()}`, 'Projected Revenue']} />
+                <YAxis tick={{ fontSize: 10, fill: '#86868b' }} axisLine={false} tickLine={false} tickFormatter={(v: any) => `₹${(v/1000).toFixed(0)}K`} />
+                <Tooltip formatter={(value: any) => [`₹${Number(value).toLocaleString()}`, 'Projected Revenue']} />
                 <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#0071e3" fill="url(#revGrad)" strokeWidth={2} dot={{ fill: '#0071e3', r: 4 }} />
                 <Line type="monotone" dataKey="baseline" name="Baseline" stroke="#e8e8ed" strokeDasharray="4 4" strokeWidth={1} dot={false} />
               </AreaChart>
@@ -227,8 +227,8 @@ export default function DashboardView() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f5" />
                 <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#86868b' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#86868b' }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v/1000).toFixed(0)}K`} />
-                <Tooltip formatter={(value: number | string) => [`$${Number(value).toLocaleString()}`, 'Projected Cash Flow']} />
+                <YAxis tick={{ fontSize: 10, fill: '#86868b' }} axisLine={false} tickLine={false} tickFormatter={(v: any) => `₹${(v/1000).toFixed(0)}K`} />
+                <Tooltip formatter={(value: any) => [`₹${Number(value).toLocaleString()}`, 'Projected Cash Flow']} />
                 <Area type="monotone" dataKey="value" name="Cash Flow" stroke="#10b981" fill="url(#cfGrad)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
@@ -241,9 +241,9 @@ export default function DashboardView() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={funnelData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f5" horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 9, fill: '#86868b' }} axisLine={false} tickLine={false} domain={[0, 100]} tickFormatter={v => `${v}%`} />
+                <XAxis type="number" tick={{ fontSize: 9, fill: '#86868b' }} axisLine={false} tickLine={false} domain={[0, 100]} tickFormatter={(v: any) => `${v}%`} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: '#86868b' }} axisLine={false} tickLine={false} width={80} />
-                <Tooltip formatter={(v: number | string) => [`${v}%`, 'Conversion Rate']} />
+                <Tooltip formatter={(v: any) => [`${v}%`, 'Conversion Rate']} />
                 <Bar dataKey="value" name="Conversion" fill="#0071e3" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>

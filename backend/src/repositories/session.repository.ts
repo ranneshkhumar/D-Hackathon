@@ -44,25 +44,29 @@ export class SessionRepository {
     confidence: number;
     rawJson: any;
   }): Promise<AgentMemory> {
+    const serializedIssues = JSON.stringify(data.issues);
+    const serializedRecommendations = JSON.stringify(data.recommendations);
+    const serializedRawJson = JSON.stringify(data.rawJson);
+
     return prisma.agentMemory.upsert({
       where: {
         sessionId_agentName: { sessionId, agentName }
       },
       update: {
         summary: data.summary,
-        issues: data.issues,
-        recommendations: data.recommendations,
+        issues: serializedIssues,
+        recommendations: serializedRecommendations,
         confidence: data.confidence,
-        rawJson: data.rawJson
+        rawJson: serializedRawJson
       },
       create: {
         sessionId,
         agentName,
         summary: data.summary,
-        issues: data.issues,
-        recommendations: data.recommendations,
+        issues: serializedIssues,
+        recommendations: serializedRecommendations,
         confidence: data.confidence,
-        rawJson: data.rawJson
+        rawJson: serializedRawJson
       }
     });
   }
@@ -75,7 +79,11 @@ export class SessionRepository {
 
   static async saveAIAnalysis(organizationId: string, analysisType: string, results: any): Promise<AIAnalysis> {
     return prisma.aIAnalysis.create({
-      data: { organizationId, analysisType, results }
+      data: { 
+        organizationId, 
+        analysisType, 
+        results: JSON.stringify(results) 
+      }
     });
   }
 

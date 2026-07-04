@@ -27,7 +27,7 @@ export class AgentExecutionService {
   /**
    * Coordinates the execution engine workflow:
    * 1. Fetches initial BusinessContext via KnowledgeService.
-   * 2. Runs the planned agents in parallel (Promise.all) and stores their results in AgentMemory.
+   * 2. Runs the planned agents sequentially to ease free-tier API rate limits.
    * 3. Rebuilds the context with the fresh AgentMemory.
    * 4. Executes the Strategy Agent to aggregate findings and generate a growth plan.
    * 5. Runs the CEO Agent to summarize findings and strategy details into an Executive Report.
@@ -38,12 +38,12 @@ export class AgentExecutionService {
     // 1. Build initial context
     let context = await KnowledgeService.buildContext(organizationId, sessionId);
 
-    // 2. Execute selected domain agents in parallel
-    const executionPromises = planAgentNames.map(async (name) => {
+    // 2. Execute selected domain agents sequentially to ease API rate limits
+    for (const name of planAgentNames) {
       const agent = AGENT_REGISTRY[name];
       if (!agent) {
         console.warn(`[AgentExecutionService] Requested agent '${name}' not found in registry. Skipping.`);
-        return null;
+        continue;
       }
       try {
         const result: AgentResult = await agent.analyze(context);
@@ -55,14 +55,13 @@ export class AgentExecutionService {
           confidence: result.confidence,
           rawJson: result.rawJson
         });
-        return result;
+        
+        console.log(`[AgentExecutionService] Executed agent '${name}' successfully. Cooling down for 1500ms...`);
+        await new Promise((resolve) => setTimeout(resolve, 1500));
       } catch (err) {
         console.error(`[AgentExecutionService] Execution failed for agent '${name}':`, err);
-        return null;
       }
-    });
-
-    await Promise.all(executionPromises);
+    }
 
     // 3. Rebuild context to incorporate fresh AgentMemory inputs
     context = await KnowledgeService.buildContext(organizationId, sessionId);
@@ -70,6 +69,9 @@ export class AgentExecutionService {
     // 4. Execute the Strategy Agent to build the primary Growth Strategy
     const strategyResult = await strategyAgent.analyze(context);
     await SessionRepository.saveAIAnalysis(organizationId, 'STRATEGY', strategyResult.rawJson);
+
+    // Add brief delay before CEO summary call
+    await new Promise((resolve) => setTimeout(resolve, 1500));
 
     // 5. Execute the CEO Agent to compile strategy findings and summary metrics
     const ceoResult = await ceoAgent.analyze(context, { strategy: strategyResult.rawJson });

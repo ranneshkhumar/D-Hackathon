@@ -2,6 +2,7 @@ export interface Organization {
   id: string;
   name: string;
   createdAt: string;
+  onboarded?: boolean;
 }
 
 export interface Message {

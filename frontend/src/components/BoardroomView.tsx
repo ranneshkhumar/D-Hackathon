@@ -236,7 +236,7 @@ export default function BoardroomView() {
           </div>
           <div className="bg-neutral-50 rounded-xl p-3.5 border border-neutral-200/60">
             <div className="text-[10px] font-bold text-neutral-400 uppercase">REVENUE OPPORTUNITY</div>
-            <div className="text-2xl font-black text-emerald-500 mt-1">${sales.revenue_opportunity.toLocaleString()}</div>
+            <div className="text-2xl font-black text-emerald-500 mt-1">₹{sales.revenue_opportunity.toLocaleString()}</div>
           </div>
         </div>
 

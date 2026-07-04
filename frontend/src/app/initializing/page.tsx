@@ -22,7 +22,7 @@ const INITIALIZATION_STEPS = [
 function InitializingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const orgName = searchParams.get('name') || 'Acme Corp';
+  const orgName = searchParams ? (searchParams.get('name') || 'Acme Corp') : 'Acme Corp';
 
   const [currentStep, setCurrentStep] = useState(0);
   const [stepProgress, setStepProgress] = useState(0);
@@ -62,15 +62,18 @@ function InitializingContent() {
   useEffect(() => {
     if (showSuccess) {
       const redirectTimer = setTimeout(() => {
-        // Save organization via OrgManager service
-        OrgManager.createOrganization(orgName);
+        // Get org id from searchParams and mark it onboarded
+        const orgId = searchParams ? searchParams.get('id') : null;
+        if (orgId) {
+          OrgManager.setOnboarded(orgId, true);
+        }
         // Navigate back to workspace
         router.push('/');
       }, 2300); // Display success screen for just over 2 seconds
 
       return () => clearTimeout(redirectTimer);
     }
-  }, [showSuccess, orgName, router]);
+  }, [showSuccess, router, searchParams]);
 
   return (
     <div className="min-h-screen w-screen flex items-center justify-center bg-neutral-50 text-neutral-800 overflow-hidden relative">

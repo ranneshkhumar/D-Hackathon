@@ -170,7 +170,7 @@ export const CEO_Agent = {
     const ctx = industryContextMap[industry] || ['market expansion', 'customer acquisition', 'revenue diversification'];
 
     let summary = `${company} is positioned at a critical inflection point within the ${industry} sector. ` +
-      `With an annual revenue baseline of $${revenue.toLocaleString()}, the immediate mandate is to accelerate ` +
+      `With an annual revenue baseline of ₹${revenue.toLocaleString()}, the immediate mandate is to accelerate ` +
       `${ctx[0]} through a disciplined ${ctx[1]} approach, ` +
       `targeting ${audience} as the primary growth vector. ` +
       `Our multi-agent analysis has identified three strategic horizons: ` +
@@ -428,17 +428,17 @@ export const Finance_Agent = {
       ],
     };
 
-    let risk_alerts = [...(riskTemplates[industry] || [
+    let risk_alerts: RiskAlert[] = [...(riskTemplates[industry] || [
       { level: 'amber', title: 'Revenue Concentration Risk', desc: 'Top 3 clients represent 62% of revenue. Diversification strategy needed.' },
       { level: 'amber', title: 'Operational Cost Pressure', desc: 'OpEx growing 3x faster than revenue. Process automation audit recommended.' },
       { level: 'green', title: 'Gross Margin Stable', desc: 'Margins holding at 58% — within target range. Monitor for Q4 expansion.' },
-    ])];
+    ] as RiskAlert[])];
 
     if (customPrompt) {
-      risk_alerts = [
+      risk_alerts = ([
         { level: 'red', title: 'Copilot Focus Risk', desc: `Analyzing implications of custom query: "${customPrompt}". Reviewing cash reserves and potential margin leakage.` },
         ...risk_alerts
-      ].slice(0, 4);
+      ] as RiskAlert[]).slice(0, 4);
     }
 
     const monthly_revenue = revenue / 12;
@@ -448,8 +448,8 @@ export const Finance_Agent = {
     }));
 
     const unit_economics = {
-      CAC: `$${(customPrompt ? rand(240, 510) : rand(180, 420)).toLocaleString()}`,
-      LTV: `$${(customPrompt ? rand(2100, 6200) : rand(1800, 5400)).toLocaleString()}`,
+      CAC: `₹${(customPrompt ? rand(240, 510) : rand(180, 420)).toLocaleString()}`,
+      LTV: `₹${(customPrompt ? rand(2100, 6200) : rand(1800, 5400)).toLocaleString()}`,
       'LTV:CAC Ratio': `${(customPrompt ? randFloat(2.8, 5.9) : randFloat(3.2, 7.1)).toFixed(1)}x`,
       'Payback Period': `${customPrompt ? rand(9, 16) : rand(7, 14)} months`,
       'Gross Margin': `${rand(55, 78)}%`,
@@ -511,7 +511,7 @@ export function runAgentOrchestrator(businessData: BusinessData, customPrompt?: 
   addLog('Sales Agent', `[Secure Key: ${SALES_AGENT_API_KEY.slice(0, 12)}...] Building outbound structures...`, '#10b981');
   const sales = Sales_Agent.run(businessData, customPrompt);
   outputs.sales = sales;
-  addLog('Sales Agent', `✅ Revenue opportunity identified: $${sales.revenue_opportunity.toLocaleString()}`, '#10b981');
+  addLog('Sales Agent', `✅ Revenue opportunity identified: ₹${sales.revenue_opportunity.toLocaleString()}`, '#10b981');
 
   // Finance
   addLog('Finance Agent', `[Secure Key: ${FINANCE_AGENT_API_KEY.slice(0, 12)}...] Executing risk audit & cash projection...`, '#f59e0b');
