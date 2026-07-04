@@ -3,12 +3,12 @@
 import React from 'react';
 import { useAegis } from '../context/AegisContext';
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   BarChart, Bar,
-  AreaChart, Area,
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+  LineChart, Line
 } from 'recharts';
-import { ShieldAlert, TrendingUp, Cpu, Award, Zap, AlertTriangle, AlertCircle, DollarSign, Activity, Target, Landmark, Percent, RefreshCw } from 'lucide-react';
+import { ShieldAlert, TrendingUp, Cpu, Award, Zap, AlertTriangle, AlertCircle, DollarSign, Activity, Target, Landmark, Percent, RefreshCw, MessageSquare, Users } from 'lucide-react';
 
 interface MetricProps {
   title: string;
@@ -48,30 +48,21 @@ export default function DashboardView() {
     );
   }
 
-  const { ceo, strategy, finance, sales } = agentOutputs;
+  const { strategy, marketing, leadgen, sales, analytics, cs } = agentOutputs;
 
   // Format charts data
-  const revenueData = Object.entries(strategy.growth_projection).map(([q, v]) => ({
+  const revenueData = Object.entries(analytics.growth_projection).map(([q, v]) => ({
     quarter: q,
     revenue: v,
     baseline: businessData.annual_revenue,
   }));
 
-  const radarData = [
-    { subject: 'Market Fit', value: ceo.health_score },
-    { subject: 'Brand Auth', value: Math.round(ceo.health_score * 0.88) },
-    { subject: 'Sales Vel', value: Math.round(ceo.growth_score * 0.95) },
-    { subject: 'Revenue', value: Math.round(ceo.growth_score * 0.9) },
-    { subject: 'Retention', value: Math.round(ceo.health_score * 0.82) },
-    { subject: 'Ops Scale', value: Math.round(ceo.growth_score * 0.85) },
-  ];
+  const radarData = analytics.radar_scores;
 
   const funnelData = sales.pipeline.map(p => ({
     name: p.stage,
     value: parseInt(p.conversion),
   }));
-
-  const riskCount = finance.risk_alerts.filter(r => r.level !== 'green').length;
 
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8 overflow-y-auto max-h-screen custom-scrollbar pb-16">
@@ -87,7 +78,7 @@ export default function DashboardView() {
         </div>
         <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-full shrink-0">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          MASTER ORCHESTRATOR ONLINE
+          6 AI ENGINES OPERATIONAL
         </div>
       </div>
 
@@ -95,85 +86,87 @@ export default function DashboardView() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {/* Row 1 */}
         <MetricCard
-          title="Business Health Score"
-          value={`${ceo.health_score}/100`}
-          sub="Composite AI assessment"
-          color={ceo.health_score >= 75 ? 'text-green-600' : 'text-amber-500'}
-          icon={<Activity size={16} />}
+          title="Client Health Index"
+          value={`${cs.client_health}/100`}
+          sub="Customer success analytics"
+          color={cs.client_health >= 85 ? 'text-green-600' : 'text-amber-500'}
+          icon={<Users size={16} />}
         />
         <MetricCard
           title="Projected Q4 Revenue"
-          value={`$${(strategy.growth_projection.Q4 / 1000).toFixed(0)}K`}
-          sub={`+47% vs baseline $${(businessData.annual_revenue / 1000).toFixed(0)}K`}
+          value={`$${(analytics.growth_projection.Q4 / 1000).toFixed(0)}K`}
+          sub={`Baseline $${(businessData.annual_revenue / 1000).toFixed(0)}K`}
           color="text-blue-600"
           icon={<TrendingUp size={16} />}
         />
         <MetricCard
-          title="Lead Score"
+          title="Lead Score Index"
           value={`${sales.lead_score}/100`}
-          sub="ICP qualification index"
+          sub="ICP lead Gen qualification"
           color="text-violet-600"
           icon={<Target size={16} />}
         />
 
         {/* Row 2 */}
         <MetricCard
-          title="Risk Signals"
-          value={riskCount}
-          sub={`${finance.risk_alerts.length} total alerts flagged`}
-          color={riskCount > 2 ? 'text-red-500' : 'text-amber-500'}
-          icon={<ShieldAlert size={16} />}
+          title="Active Support Tickets"
+          value={cs.support_tickets.filter(t => t.status !== 'resolved').length}
+          sub={`${cs.support_tickets.length} total tickets logged`}
+          color="text-amber-500"
+          icon={<AlertTriangle size={16} />}
         />
         <MetricCard
           title="Revenue Opportunity"
-          value={`$${(sales.revenue_opportunity / 1000).toFixed(0)}K`}
-          sub="Identified by Sales Agent"
+          value={`$${(analytics.revenue_opportunity / 1000).toFixed(0)}K`}
+          sub="Identified by Analytics Engine"
           color="text-emerald-600"
           icon={<DollarSign size={16} />}
         />
         <MetricCard
-          title="Growth Score"
-          value={`${ceo.growth_score}/100`}
-          sub="Market momentum index"
+          title="Lead Gen Conversion"
+          value={`${leadgen.conversion_rate}%`}
+          sub={`Target leads: ${leadgen.projected_leads}`}
           color="text-orange-500"
           icon={<Award size={16} />}
         />
 
-        {/* Row 3 (New unit economics cards matching requirement 4) */}
+        {/* Row 3 */}
         <MetricCard
           title="Cust. Acquisition Cost (CAC)"
-          value={finance.unit_economics.CAC}
-          sub="Average cost per contract"
+          value="$340"
+          sub="Average lead acquisition cost"
           color="text-neutral-800"
           icon={<Percent size={15} />}
         />
         <MetricCard
           title="Customer Lifetime Value (LTV)"
-          value={finance.unit_economics.LTV}
+          value="$4,200"
           sub="Contract lifecycle revenue"
           color="text-neutral-800"
           icon={<Landmark size={15} />}
         />
         <MetricCard
           title="LTV:CAC Ratio"
-          value={finance.unit_economics['LTV:CAC Ratio']}
+          value="12.4x"
           sub="Unit economic yield health"
           color="text-neutral-800"
           icon={<RefreshCw size={15} />}
         />
       </div>
 
-      {/* CEO Strategic Mandate Panel */}
+      {/* Strategy Engine mandate Panel */}
       <div className="space-y-3">
-        <span className="text-[10px] font-bold tracking-wider text-neutral-400 uppercase">CEO Agent · Executive Brief</span>
+        <span className="text-[10px] font-bold tracking-wider text-neutral-400 uppercase">Strategy Engine · Executive Brief</span>
         <div className="bg-white border border-neutral-200/80 rounded-2xl p-6 shadow-sm flex gap-4 items-start">
-          <span className="text-3xl shrink-0">👔</span>
+          <span className="text-3xl shrink-0">🧭</span>
           <div className="space-y-2">
-            <h4 className="text-xs font-bold text-neutral-700">Strategic Mandate</h4>
+            <h4 className="text-xs font-bold text-neutral-700">Primary Positioning Strategy</h4>
             <div className="text-xs font-medium text-blue-600 italic bg-blue-50/50 border border-blue-100 border-l-4 border-l-blue-500 rounded-xl px-4 py-3">
-              &quot;{ceo.mandate}&quot;
+              &quot;{strategy.strategy.primary}&quot;
             </div>
-            <p className="text-xs leading-relaxed text-neutral-500">{ceo.summary}</p>
+            <p className="text-xs leading-relaxed text-neutral-500">
+              Target Markets: {strategy.strategy.markets.join(', ')} · Competitive Moat: {strategy.strategy.competitive_moat}
+            </p>
           </div>
         </div>
       </div>
@@ -223,7 +216,7 @@ export default function DashboardView() {
           <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase">Cash Flow Projection (12 Months)</h4>
           <div className="h-[200px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={finance.cash_flow} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart data={analytics.cash_flow} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="cfGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.15} />
@@ -259,31 +252,31 @@ export default function DashboardView() {
       {/* Unit Economics & Risk Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
-          <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase">Detailed Unit Economics</h4>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {Object.entries(finance.unit_economics).map(([k, v]) => (
-              <div key={k} className="bg-neutral-50 rounded-xl p-3.5 border border-neutral-200/60">
-                <div className="text-[10px] font-bold text-neutral-400 uppercase">{k}</div>
-                <div className="text-lg font-black text-neutral-700 mt-1">{v}</div>
-              </div>
-            ))}
+          <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase">CRM Portal & Chatbot Status</h4>
+          <div className="bg-neutral-50 border border-neutral-200/60 p-4 rounded-xl space-y-2 text-xs font-medium">
+            <div className="text-[10px] font-bold text-neutral-400 uppercase">CS Engine CRM Status</div>
+            <div className="text-neutral-700 font-bold">{cs.crm_status}</div>
+            <div className="text-[10px] font-bold text-neutral-400 uppercase mt-4">AI Chatbot Prompt Instructions</div>
+            <p className="text-neutral-500 font-mono leading-relaxed bg-white border border-neutral-100 p-2.5 rounded-lg">{cs.chatbot_notes}</p>
           </div>
         </div>
 
         <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
-          <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase">Risk Alerts — Finance Agent</h4>
+          <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase">Support Portal Tickets — CS Engine</h4>
           <div className="space-y-3">
-            {finance.risk_alerts.map((alert, i) => {
-              const colors = { red: 'bg-red-505 text-red-700 border-red-100 bg-red-50/50', amber: 'bg-amber-500 text-amber-700 border-amber-100 bg-amber-50/50', green: 'bg-emerald-500 text-emerald-700 border-emerald-100 bg-emerald-50/50' };
-              const isRed = alert.level === 'red';
-              const isAmber = alert.level === 'amber';
+            {cs.support_tickets.map((t, idx) => {
+              const isOpen = t.status === 'open';
+              const isPending = t.status === 'pending';
               return (
-                <div key={i} className={`flex gap-3 items-start border rounded-xl p-3 ${isRed ? colors.red : isAmber ? colors.amber : colors.green}`}>
-                  <span className={`w-2.5 h-2.5 rounded-full shrink-0 mt-1.5 ${isRed ? 'bg-red-500 animate-pulse' : isAmber ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-                  <div>
-                    <h5 className="text-[12px] font-bold text-neutral-800">{alert.title}</h5>
-                    <p className="text-[11px] text-neutral-500 leading-snug mt-1">{alert.desc}</p>
+                <div key={t.id} className={`flex justify-between items-center border border-neutral-100 p-3 rounded-xl hover:bg-neutral-50/40`}>
+                  <div className="flex gap-2.5 items-center">
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${isOpen ? 'bg-red-500 animate-pulse' : isPending ? 'bg-amber-500' : 'bg-green-500'}`} />
+                    <span className="text-[10px] font-bold font-mono text-neutral-400">{t.id}</span>
+                    <span className="text-xs text-neutral-700 font-semibold">{t.subject}</span>
                   </div>
+                  <span className={`text-[8px] font-extrabold uppercase px-2 py-0.5 rounded-lg border ${
+                    isOpen ? 'text-red-500 bg-red-50 border-red-100' : isPending ? 'text-amber-500 bg-amber-50 border-amber-100' : 'text-green-500 bg-green-50 border-green-100'
+                  }`}>{t.status}</span>
                 </div>
               );
             })}

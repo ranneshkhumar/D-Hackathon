@@ -189,11 +189,12 @@ export default function DiscoveryView({ onSuccessRedirect }: DiscoveryViewProps)
             </h4>
             <div className="space-y-3.5">
               {[
-                { icon: '👔', name: 'CEO Agent', role: 'Sets strategic mandate & health score' },
-                { icon: '🧭', name: 'Strategy Agent', role: 'Maps out 12-month horizon blueprint' },
-                { icon: '📣', name: 'Marketing Agent', role: 'Generates campaigns & channel mix' },
-                { icon: '🎯', name: 'Sales Agent', role: 'Builds conversion pipelines & outbound scripts' },
-                { icon: '💹', name: 'Finance Agent', role: 'Models risk alerts & unit economics' },
+                { icon: '🧭', name: 'Strategy Engine', role: 'Brand positioning & frameworks' },
+                { icon: '📣', name: 'Marketing Engine', role: '360 marketing strategies' },
+                { icon: '⚡', name: 'Lead Gen Engine', role: 'whatsapp & digital outreach' },
+                { icon: '🎯', name: 'Sales Engine', role: 'Funnel closing & scripting' },
+                { icon: '📊', name: 'Analytics Engine', color: '#3b82f6', role: 'Forecasting & opportunity audits' },
+                { icon: '👑', name: 'Customer Success Engine', role: 'CRM databases & support chatbot' },
               ].map((step, idx) => (
                 <div key={idx} className="flex gap-3 items-start">
                   <span className="text-lg shrink-0">{step.icon}</span>

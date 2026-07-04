@@ -88,7 +88,7 @@ export function AegisProvider({ children }: { children: ReactNode }) {
     setCopilotMessages([
       {
         role: 'assistant',
-        text: 'Greetings. I am the Master Executive Copilot. Ask me to coordinate any strategic objective down to the CEO, Marketing, Strategy, Sales, and Finance units.',
+        text: 'Greetings. I am the Master Executive Copilot. Ask me to coordinate any strategic objective down to the Strategy, Marketing, Lead Gen, Sales, Analytics, and Customer Success units.',
         timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
       }
     ]);
@@ -118,7 +118,7 @@ export function AegisProvider({ children }: { children: ReactNode }) {
 
       const assistantMsg: CopilotMessage = {
         role: 'assistant',
-        text: `### 🤖 Master Copilot Plan Executed\n\nI have parsed your request: **"${prompt}"** and orchestrated the multi-agent workflow:\n\n1. **CEO Agent**: Configured mandate and health scores.\n2. **Strategy Agent**: Formulated dynamic tactical strategy.\n3. **Marketing Agent**: Generated optimized campaign hooks.\n4. **Sales Agent**: Updated objection scripts.\n5. **Finance Agent**: Audited risk matrices.\n\nAll dashboard parameters and boardroom logs have been synchronized.`,
+        text: `### 🤖 Master Copilot Plan Executed\n\nI have parsed your request: **"${prompt}"** and orchestrated the 6 specialized AI engines workflow:\n\n1. **Strategy Engine (🧭)**: Aligned brand positioning & framework.\n2. **Marketing Engine (📣)**: Refined 360 marketing & campaigns copy.\n3. **Lead Gen Engine (⚡)**: Deployed digital, WhatsApp & physical lead workflows.\n4. **Sales Engine (🎯)**: Re-configured sales funnels & script answers.\n5. **Analytics Engine (📊)**: Processed growth forecasting & metrics.\n6. **Customer Success Engine (👑)**: Configured client status metrics & chatbot prompts.\n\nAll dashboard parameters and boardroom logs have been synchronized.`,
         timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
       };
       setCopilotMessages(prev => [...prev, assistantMsg]);

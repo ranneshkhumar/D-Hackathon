@@ -2,8 +2,16 @@
 
 import React, { useState } from 'react';
 import { useAegis } from '../context/AegisContext';
-import { AGENTS_META, CEO_AGENT_API_KEY, STRATEGY_AGENT_API_KEY, MARKETING_AGENT_API_KEY, SALES_AGENT_API_KEY, FINANCE_AGENT_API_KEY } from '../engine/agents';
-import { Activity, Terminal, Shield } from 'lucide-react';
+import {
+  AGENTS_META,
+  STRATEGY_ENGINE_API_KEY,
+  MARKETING_ENGINE_API_KEY,
+  LEAD_GEN_ENGINE_API_KEY,
+  SALES_ENGINE_API_KEY,
+  ANALYTICS_ENGINE_API_KEY,
+  CUSTOMER_SUCCESS_ENGINE_API_KEY
+} from '../engine/agents';
+import { Activity, Terminal, Shield, Percent, Landmark, RefreshCw, Mail, Users } from 'lucide-react';
 
 export default function BoardroomView() {
   const { agentOutputs, agentLog, onboarded, businessData } = useAegis();
@@ -18,53 +26,13 @@ export default function BoardroomView() {
     );
   }
 
-  const { ceo, strategy, marketing, sales, finance } = agentOutputs;
+  const { strategy, marketing, leadgen, sales, analytics, cs } = agentOutputs;
 
   const renderApiBadge = (keyPlaceholder: string) => (
     <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 shrink-0">
       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
       <span>API Connected</span>
       <span className="text-[8px] opacity-60 font-mono">({keyPlaceholder.slice(0, 10)}...)</span>
-    </div>
-  );
-
-  const renderCEO = () => (
-    <div className="space-y-6">
-      <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
-        <div className="flex items-center justify-between gap-3 border-b border-neutral-100 pb-3">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">👔</span>
-            <div>
-              <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wide">CEO Agent</h3>
-              <p className="text-[11px] text-neutral-400">Chief Intelligence Officer · Synthesizes board briefing mandates</p>
-            </div>
-          </div>
-          {renderApiBadge(CEO_AGENT_API_KEY)}
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-neutral-50 rounded-xl p-3.5 border border-neutral-200/60">
-            <div className="text-[10px] font-bold text-neutral-400 uppercase">HEALTH SCORE</div>
-            <div className="text-2xl font-black text-blue-500 mt-1">{ceo.health_score}<span className="text-xs font-normal text-neutral-400">/100</span></div>
-          </div>
-          <div className="bg-neutral-50 rounded-xl p-3.5 border border-neutral-200/60">
-            <div className="text-[10px] font-bold text-neutral-400 uppercase">GROWTH SCORE</div>
-            <div className="text-2xl font-black text-emerald-500 mt-1">{ceo.growth_score}<span className="text-xs font-normal text-neutral-400">/100</span></div>
-          </div>
-        </div>
-
-        <div className="space-y-1.5">
-          <span className="text-[10px] font-bold tracking-wider text-neutral-400 uppercase">STRATEGIC MANDATE</span>
-          <div className="bg-blue-50/50 border border-blue-100 border-l-4 border-l-blue-500 rounded-xl px-4 py-3 text-xs italic text-neutral-700">
-            &quot;{ceo.mandate}&quot;
-          </div>
-        </div>
-
-        <div className="space-y-1.5">
-          <span className="text-[10px] font-bold tracking-wider text-neutral-400 uppercase">EXECUTIVE SUMMARY</span>
-          <p className="text-xs leading-relaxed text-neutral-500">{ceo.summary}</p>
-        </div>
-      </div>
     </div>
   );
 
@@ -77,11 +45,11 @@ export default function BoardroomView() {
             <div className="flex items-center gap-3">
               <span className="text-2xl w-10 h-10 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center">🧭</span>
               <div>
-                <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wide">Strategy Agent</h3>
+                <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wide">Strategy Engine</h3>
                 <p className="text-[11px] text-neutral-400">Chief Strategy Architect · Maps growth pillars & SWOT moats</p>
               </div>
             </div>
-            {renderApiBadge(STRATEGY_AGENT_API_KEY)}
+            {renderApiBadge(STRATEGY_ENGINE_API_KEY)}
           </div>
 
           <div className="space-y-1">
@@ -120,19 +88,6 @@ export default function BoardroomView() {
             <p className="text-xs text-neutral-500 font-medium">{s.competitive_moat}</p>
           </div>
         </div>
-
-        {/* Projections card */}
-        <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-3">
-          <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase">Quarterly Projections</h4>
-          <div className="grid grid-cols-4 gap-3">
-            {Object.entries(strategy.growth_projection).map(([q, v]) => (
-              <div key={q} className="bg-neutral-50 rounded-xl p-3 text-center border border-neutral-200/60">
-                <div className="text-[9px] font-bold text-neutral-400 uppercase">{q}</div>
-                <div className="text-sm font-black text-neutral-800 mt-1">${(v/1000).toFixed(0)}K</div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     );
   };
@@ -146,11 +101,11 @@ export default function BoardroomView() {
             <div className="flex items-center gap-3">
               <span className="text-2xl w-10 h-10 rounded-xl bg-cyan-50 border border-cyan-100 flex items-center justify-center">📣</span>
               <div>
-                <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wide">Marketing Agent</h3>
-                <p className="text-[11px] text-neutral-400">Chief Growth Marketer · Builds marketing & campaign frameworks</p>
+                <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wide">Marketing Engine</h3>
+                <p className="text-[11px] text-neutral-400">Chief Marketing Officer · Designs 360-degree marketing copy</p>
               </div>
             </div>
-            {renderApiBadge(MARKETING_AGENT_API_KEY)}
+            {renderApiBadge(MARKETING_ENGINE_API_KEY)}
           </div>
 
           <div className="space-y-1">
@@ -189,7 +144,7 @@ export default function BoardroomView() {
 
         {/* Content calendar table */}
         <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-3">
-          <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase">4-Week Content Calendar</h4>
+          <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase">Content Calendar Matrix</h4>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
@@ -215,6 +170,60 @@ export default function BoardroomView() {
     );
   };
 
+  const renderLeadGen = () => (
+    <div className="space-y-5">
+      <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
+        <div className="flex items-center justify-between gap-3 border-b border-neutral-100 pb-3">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl w-10 h-10 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center">⚡</span>
+            <div>
+              <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wide">Lead Gen Engine</h3>
+              <p className="text-[11px] text-neutral-400">Chief Lead Generator · WhatsApp & digital campaign protocols</p>
+            </div>
+          </div>
+          {renderApiBadge(LEAD_GEN_ENGINE_API_KEY)}
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-neutral-50 rounded-xl p-3.5 border border-neutral-200/60">
+            <div className="text-[10px] font-bold text-neutral-400 uppercase">PROJECTED LEADS VOLUME</div>
+            <div className="text-2xl font-black text-orange-500 mt-1">{leadgen.projected_leads}</div>
+          </div>
+          <div className="bg-neutral-50 rounded-xl p-3.5 border border-neutral-200/60">
+            <div className="text-[10px] font-bold text-neutral-400 uppercase">CONVERSION INDEX</div>
+            <div className="text-2xl font-black text-orange-500 mt-1">{leadgen.conversion_rate}%</div>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <span className="text-[10px] font-bold tracking-wider text-neutral-400 uppercase">DIGITAL AD STRATEGY</span>
+          <div className="bg-neutral-50 border border-neutral-200 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-neutral-700">
+            {leadgen.digital_strategy}
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <span className="text-[10px] font-bold tracking-wider text-neutral-400 uppercase">WHATSAPP CAMPAIGN COPYWRITING</span>
+          <pre className="bg-neutral-50 border border-neutral-200/60 rounded-xl p-3.5 text-[11px] leading-relaxed text-neutral-500 whitespace-pre-wrap font-sans">
+            {leadgen.whatsapp_copy}
+          </pre>
+        </div>
+
+        <div className="space-y-2">
+          <span className="text-[10px] font-bold tracking-wider text-neutral-400 uppercase">PHYSICAL MARKETING CONVERSION IDEAS</span>
+          <div className="space-y-2">
+            {leadgen.physical_ideas.map((idea, idx) => (
+              <div key={idx} className="flex gap-2 items-center text-xs font-semibold text-neutral-600">
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
+                <span>{idea}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderSales = () => (
     <div className="space-y-5">
       <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
@@ -222,22 +231,11 @@ export default function BoardroomView() {
           <div className="flex items-center gap-3">
             <span className="text-2xl w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">🎯</span>
             <div>
-              <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wide">Sales Agent</h3>
-              <p className="text-[11px] text-neutral-400">Chief Revenue Officer · Configures lead scoring & discovery frameworks</p>
+              <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wide">Sales Engine</h3>
+              <p className="text-[11px] text-neutral-400">Chief Revenue Officer · Configures sales funnels & objection handling</p>
             </div>
           </div>
-          {renderApiBadge(SALES_AGENT_API_KEY)}
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-neutral-50 rounded-xl p-3.5 border border-neutral-200/60">
-            <div className="text-[10px] font-bold text-neutral-400 uppercase">ICP LEAD SCORE</div>
-            <div className="text-2xl font-black text-emerald-500 mt-1">{sales.lead_score}<span className="text-xs font-normal text-neutral-400">/100</span></div>
-          </div>
-          <div className="bg-neutral-50 rounded-xl p-3.5 border border-neutral-200/60">
-            <div className="text-[10px] font-bold text-neutral-400 uppercase">REVENUE OPPORTUNITY</div>
-            <div className="text-2xl font-black text-emerald-500 mt-1">${sales.revenue_opportunity.toLocaleString()}</div>
-          </div>
+          {renderApiBadge(SALES_ENGINE_API_KEY)}
         </div>
 
         <div className="space-y-2">
@@ -291,7 +289,41 @@ export default function BoardroomView() {
     </div>
   );
 
-  const renderFinance = () => {
+  const renderAnalytics = () => (
+    <div className="space-y-5">
+      <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
+        <div className="flex items-center justify-between gap-3 border-b border-neutral-100 pb-3">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">📊</span>
+            <div>
+              <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wide">Analytics Engine</h3>
+              <p className="text-[11px] text-neutral-400">Chief Analytics Officer · Audits projections & competitive radar indices</p>
+            </div>
+          </div>
+          {renderApiBadge(ANALYTICS_ENGINE_API_KEY)}
+        </div>
+
+        <div className="bg-neutral-50 rounded-xl p-3.5 border border-neutral-200/60">
+          <div className="text-[10px] font-bold text-neutral-400 uppercase">IDENTIFIED REVENUE OPPORTUNITY</div>
+          <div className="text-2xl font-black text-blue-500 mt-1">${analytics.revenue_opportunity.toLocaleString()}</div>
+        </div>
+
+        <div className="bg-white border border-neutral-200/80 rounded-xl p-4 space-y-3">
+          <span className="text-[10px] font-bold tracking-wider text-neutral-400 uppercase">QUARTERLY GROWTH FORECASTS</span>
+          <div className="grid grid-cols-4 gap-3">
+            {Object.entries(analytics.growth_projection).map(([q, v]) => (
+              <div key={q} className="bg-neutral-50 rounded-xl p-3 text-center border border-neutral-200/60">
+                <div className="text-[9px] font-bold text-neutral-400 uppercase">{q}</div>
+                <div className="text-sm font-black text-neutral-800 mt-1">${(v/1000).toFixed(0)}K</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderCS = () => {
     const colors = { red: 'bg-red-500 text-red-700 border-red-100 bg-red-50/50', amber: 'bg-amber-500 text-amber-700 border-amber-100 bg-amber-50/50', green: 'bg-emerald-500 text-emerald-700 border-emerald-100 bg-emerald-50/50' };
     const textColors = { red: 'bg-red-500', amber: 'bg-amber-500', green: 'bg-emerald-500' };
     return (
@@ -299,56 +331,50 @@ export default function BoardroomView() {
         <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
           <div className="flex items-center justify-between gap-3 border-b border-neutral-100 pb-3">
             <div className="flex items-center gap-3">
-              <span className="text-2xl w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center">💹</span>
+              <span className="text-2xl w-10 h-10 rounded-xl bg-pink-50 border border-pink-100 flex items-center justify-center">👑</span>
               <div>
-                <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wide">Finance Agent</h3>
-                <p className="text-[11px] text-neutral-400">Chief Financial Intelligence Officer · Audits risks, cash burn, margin health</p>
+                <h3 className="text-xs font-bold text-neutral-700 uppercase tracking-wide">Customer Success Engine</h3>
+                <p className="text-[11px] text-neutral-400">Chief Customer Officer · Manages CRM client profiles & chatbot prompts</p>
               </div>
             </div>
-            {renderApiBadge(FINANCE_AGENT_API_KEY)}
+            {renderApiBadge(CUSTOMER_SUCCESS_ENGINE_API_KEY)}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-neutral-50 rounded-xl p-3.5 border border-neutral-200/60">
-              <div className="text-[10px] font-bold text-neutral-400 uppercase">CUSTOMER FINANCIAL HEALTH</div>
-              <div className="text-2xl font-black text-amber-500 mt-1">{finance.customer_health}<span className="text-xs font-normal text-neutral-400">/100</span></div>
-            </div>
-            <div className="bg-neutral-50 rounded-xl p-3.5 border border-neutral-200/60">
-              <div className="text-[10px] font-bold text-neutral-400 uppercase">MARKET READINESS</div>
-              <div className="text-2xl font-black text-emerald-500 mt-1">{finance.market_readiness}<span className="text-xs font-normal text-neutral-400">/100</span></div>
-            </div>
+          <div className="bg-neutral-50 rounded-xl p-3.5 border border-neutral-200/60">
+            <div className="text-[10px] font-bold text-neutral-400 uppercase">CRM DATABASE STATE</div>
+            <div className="text-sm font-bold text-neutral-800 mt-1">{cs.crm_status}</div>
           </div>
 
           <div className="space-y-3">
-            <span className="text-[10px] font-bold tracking-wider text-neutral-400 uppercase">RISK AUDIT SIGNALS</span>
-            {finance.risk_alerts.map((alert, idx) => (
-              <div key={idx} className={`flex gap-3 items-start border rounded-xl p-3.5 ${alert.level === 'red' ? colors.red : alert.level === 'amber' ? colors.amber : colors.green}`}>
-                <span className={`w-2.5 h-2.5 rounded-full shrink-0 mt-1.5 ${textColors[alert.level]}`} />
-                <div>
-                  <h5 className="text-[12px] font-bold text-neutral-800">{alert.title}</h5>
-                  <p className="text-[11px] text-neutral-500 mt-1 leading-snug">{alert.desc}</p>
+            <span className="text-[10px] font-bold tracking-wider text-neutral-400 uppercase">ACTIVE SUPPORT TICKETS</span>
+            {cs.support_tickets.map((t) => {
+              const isOpen = t.status === 'open';
+              const isPending = t.status === 'pending';
+              return (
+                <div key={t.id} className={`flex justify-between items-center border border-neutral-100 p-3 rounded-xl hover:bg-neutral-50/40`}>
+                  <div className="flex gap-2.5 items-center">
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${isOpen ? 'bg-red-500 animate-pulse' : isPending ? 'bg-amber-500' : 'bg-green-500'}`} />
+                    <span className="text-[10px] font-bold font-mono text-neutral-400">{t.id}</span>
+                    <span className="text-xs text-neutral-700 font-semibold">{t.subject}</span>
+                  </div>
+                  <span className={`text-[8px] font-extrabold uppercase px-2 py-0.5 rounded-lg border ${
+                    isOpen ? 'text-red-500 bg-red-50 border-red-100' : isPending ? 'text-amber-500 bg-amber-50 border-amber-100' : 'text-green-500 bg-green-50 border-green-100'
+                  }`}>{t.status}</span>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          <div className="space-y-2">
-            <span className="text-[10px] font-bold tracking-wider text-neutral-400 uppercase">UNIT ECONOMICS BOARD</span>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {Object.entries(finance.unit_economics).map(([k, v]) => (
-                <div key={k} className="bg-neutral-50 rounded-xl p-3 border border-neutral-200/60">
-                  <div className="text-[9px] font-bold text-neutral-400 uppercase">{k}</div>
-                  <div className="text-sm font-black text-neutral-700 mt-1">{v}</div>
-                </div>
-              ))}
-            </div>
+          <div className="space-y-1.5">
+            <span className="text-[10px] font-bold tracking-wider text-neutral-400 uppercase">CS CHATBOT PROMPT INSTRUCTIONS</span>
+            <p className="text-xs font-mono text-neutral-500 bg-neutral-50 p-3 rounded-xl border border-neutral-200/40">{cs.chatbot_notes}</p>
           </div>
         </div>
       </div>
     );
   };
 
-  const renderers = [renderCEO, renderStrategy, renderMarketing, renderSales, renderFinance];
+  const renderers = [renderStrategy, renderMarketing, renderLeadGen, renderSales, renderAnalytics, renderCS];
 
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8 overflow-y-auto max-h-screen custom-scrollbar pb-16">
@@ -357,7 +383,7 @@ export default function BoardroomView() {
       <div>
         <span className="text-[10px] font-bold tracking-widest text-neutral-400 uppercase">5D Framework · Design & Deliver Phase</span>
         <h1 className="text-3xl font-extrabold tracking-tight text-neutral-800 mt-1">Agent Boardroom</h1>
-        <p className="text-xs text-neutral-400 mt-1">Simulated 5-agent sequence workspace — {businessData.company_name}</p>
+        <p className="text-xs text-neutral-400 mt-1">Simulated 6-engine boardroom sequence — {businessData.company_name}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 items-start">
