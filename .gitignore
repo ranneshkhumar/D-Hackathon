@@ -15,6 +15,9 @@ venv/
 .python-version
 
 # ── React / Node ────────────────────────────────────────
+node_modules/
+.next/
+out/
 aegis-react/node_modules/
 aegis-react/dist/
 aegis-react/.vite/

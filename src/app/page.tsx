@@ -6,11 +6,16 @@ import { OrgManager } from '@/services/org-manager';
 import { Organization } from '@/types';
 import Sidebar from '@/components/Sidebar';
 import EmptyState from '@/components/EmptyState';
-import ChatWorkspace from '@/components/ChatWorkspace';
 import CreateOrgModal from '@/components/CreateOrgModal';
 import { Loader2 } from 'lucide-react';
+import { AegisProvider } from '@/context/AegisContext';
+import DashboardView from '@/components/DashboardView';
+import DiscoveryView from '@/components/DiscoveryView';
+import BoardroomView from '@/components/BoardroomView';
+import ArchitectureView from '@/components/ArchitectureView';
+import ChatWorkspace from '@/components/ChatWorkspace';
 
-export default function WorkspacePage() {
+function WorkspaceContent() {
   const router = useRouter();
   
   // State management for multi-organizations
@@ -18,6 +23,7 @@ export default function WorkspacePage() {
   const [activeOrg, setActiveOrg] = useState<Organization | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [activeView, setActiveView] = useState('dashboard');
 
   // Sync state from localStorage on client-side mount
   const refreshState = () => {
@@ -74,22 +80,52 @@ export default function WorkspacePage() {
     );
   }
 
+  // Choose which operational view to render
+  const renderActiveView = () => {
+    switch (activeView) {
+      case 'dashboard':
+        return <DashboardView />;
+      case 'discovery':
+        return <DiscoveryView onSuccessRedirect={() => setActiveView('dashboard')} />;
+      case 'boardroom':
+        return <BoardroomView />;
+      case 'architecture':
+        return <ArchitectureView />;
+      case 'chat':
+        return <ChatWorkspace activeOrg={activeOrg} />;
+      default:
+        return <DashboardView />;
+    }
+  };
+
   // Render Dashboard Workspace once active organization is created/selected
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-neutral-950">
+    <div className="flex h-screen w-screen overflow-hidden bg-neutral-50">
       <Sidebar
         organizations={organizations}
         activeOrg={activeOrg}
         onSelectOrg={handleSelectOrg}
         onCreateOrgClick={() => setIsModalOpen(true)}
         onResetWorkspace={handleResetWorkspace}
+        activeView={activeView}
+        onSelectView={setActiveView}
       />
-      <ChatWorkspace activeOrg={activeOrg} />
+      <div className="flex-1 flex flex-col min-w-0 bg-neutral-50 overflow-hidden">
+        {renderActiveView()}
+      </div>
       <CreateOrgModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateOrg}
       />
     </div>
+  );
+}
+
+export default function WorkspacePage() {
+  return (
+    <AegisProvider>
+      <WorkspaceContent />
+    </AegisProvider>
   );
 }
