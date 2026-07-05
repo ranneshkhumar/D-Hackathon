@@ -1,0 +1,290 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Organization {
+  id            String            @id @default(uuid())
+  name          String
+  website       String?
+  industry      String
+  employeeCount Int?
+  branchCount   Int?
+  foundedYear   Int?
+  currency      String            @default("INR")
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  businessProfile    BusinessProfile?
+  businessGoals      BusinessGoal[]
+  businessChallenges BusinessChallenge[]
+  financialMetrics   FinancialMetrics[]
+  salesMetrics       SalesMetrics[]
+  marketingMetrics   MarketingMetrics[]
+  customerMetrics    CustomerMetrics[]
+  kpiMetrics         KPIMetrics?
+  uploadedFiles      UploadedFile[]
+  importHistories    ImportHistory[]
+  sessions           ConversationSession[]
+  analyses           AIAnalysis[]
+}
+
+model BusinessProfile {
+  id                  String   @id @default(uuid())
+  organizationId      String   @unique
+  businessDescription String?
+  businessModel       String?
+  products            String?
+  services            String?
+  targetAudience      String?
+  competitors         String?
+  vision              String?
+  mission             String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model BusinessGoal {
+  id             String    @id @default(uuid())
+  organizationId String
+  goalType       String
+  description    String
+  targetValue    String?
+  deadline       DateTime?
+  priority       String?
+  status         String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+model BusinessChallenge {
+  id             String   @id @default(uuid())
+  organizationId String
+  category       String?
+  description    String
+  severity       String?
+  status         String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+model FinancialMetrics {
+  id                      String   @id @default(uuid())
+  organizationId          String
+  month                   Int?
+  year                    Int?
+  monthlyRevenue          Decimal? @db.Decimal(12, 2)
+  monthlyExpenses         Decimal? @db.Decimal(12, 2)
+  grossProfit             Decimal? @db.Decimal(12, 2)
+  netProfit               Decimal? @db.Decimal(12, 2)
+  profitMargin            Decimal? @db.Decimal(5, 2)
+  cashFlow                Decimal? @db.Decimal(12, 2)
+  burnRate                Decimal? @db.Decimal(12, 2)
+  customerAcquisitionCost Decimal? @db.Decimal(10, 2)
+  customerLifetimeValue   Decimal? @db.Decimal(10, 2)
+  averageOrderValue       Decimal? @db.Decimal(10, 2)
+  metricSource            String   @default("manual")
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, month, year])
+  @@index([organizationId])
+}
+
+model SalesMetrics {
+  id                  String   @id @default(uuid())
+  organizationId      String
+  month               Int?
+  year                Int?
+  monthlyLeads        Int?
+  qualifiedLeads      Int?
+  opportunities       Int?
+  closedDeals         Int?
+  conversionRate      Decimal? @db.Decimal(5, 2)
+  averageSalesCycle   Decimal? @db.Decimal(5, 1)
+  averageDealSize     Decimal? @db.Decimal(10, 2)
+  topSellingProduct   String?
+  metricSource        String   @default("manual")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, month, year])
+  @@index([organizationId])
+}
+
+model MarketingMetrics {
+  id                    String   @id @default(uuid())
+  organizationId        String
+  month                 Int?
+  year                  Int?
+  monthlyMarketingSpend Decimal? @db.Decimal(12, 2)
+  websiteVisitors       Int?
+  socialFollowers       Int?
+  emailSubscribers      Int?
+  ctr                   Decimal? @db.Decimal(5, 2)
+  roi                   Decimal? @db.Decimal(5, 2)
+  googleAdsSpend        Decimal? @db.Decimal(12, 2)
+  metaAdsSpend          Decimal? @db.Decimal(12, 2)
+  instagramSpend        Decimal? @db.Decimal(12, 2)
+  linkedinSpend         Decimal? @db.Decimal(12, 2)
+  metricSource          String   @default("manual")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, month, year])
+  @@index([organizationId])
+}
+
+model CustomerMetrics {
+  id                   String   @id @default(uuid())
+  organizationId       String
+  month                Int?
+  year                 Int?
+  activeCustomers      Int?
+  newCustomers         Int?
+  retentionRate        Decimal? @db.Decimal(5, 2)
+  churnRate            Decimal? @db.Decimal(5, 2)
+  nps                  Int?
+  customerSatisfaction Decimal? @db.Decimal(5, 2)
+  supportTickets       Int?
+  averageResponseTime  Decimal? @db.Decimal(5, 2)
+  metricSource         String   @default("manual")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, month, year])
+  @@index([organizationId])
+}
+
+model KPIMetrics {
+  id                  String   @id @default(uuid())
+  organizationId      String   @unique
+  businessHealthScore Float?
+  growthScore         Float?
+  revenueOpportunity  Decimal? @db.Decimal(12, 2)
+  leadScore           Float?
+  customerHealth      Float?
+  marketReadiness     Float?
+  riskScore           Float?
+  executiveSummary    String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model UploadedFile {
+  id                 String    @id @default(uuid())
+  organizationId     String
+  originalFileName   String
+  storedFileName     String
+  fileType           String
+  fileCategory       String?
+  storagePath        String
+  fileSize           Int?
+  mimeType           String?
+  checksum           String?
+  indexedInVectorDB  Boolean   @default(false)
+  indexedAt          DateTime?
+  uploadedAt         DateTime  @default(now())
+  processingStatus   String    @default("PENDING")
+  parsedSuccessfully Boolean   @default(false)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+model ImportHistory {
+  id             String   @id @default(uuid())
+  organizationId String
+  fileName       String
+  importType     String
+  rowsImported   Int      @default(0)
+  rowsRejected   Int      @default(0)
+  status         String   @default("COMPLETED")
+  errorLog       String?
+  importedAt     DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+model ConversationSession {
+  id             String   @id @default(uuid())
+  organizationId String
+  title          String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization  Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  chats         ChatHistory[]
+  agentMemories AgentMemory[]
+
+  @@index([organizationId])
+}
+
+model ChatHistory {
+  id        String   @id @default(uuid())
+  sessionId String
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+
+  session ConversationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}
+
+model AgentMemory {
+  id              String   @id @default(uuid())
+  sessionId       String
+  agentName       String
+  summary         String
+  issues          String
+  recommendations String
+  confidence      Float
+  rawJson         String
+  createdAt       DateTime @default(now())
+
+  session ConversationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, agentName])
+  @@index([sessionId])
+}
+
+model AIAnalysis {
+  id             String   @id @default(uuid())
+  organizationId String
+  analysisType   String
+  agentName      String?
+  results        String
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
