@@ -47,19 +47,11 @@ export default function Sidebar({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const settingsRef = useRef<HTMLDivElement>(null);
-
-  // Aegis Navigation Items
   const navItems = [
-<<<<<<< HEAD:src/components/Sidebar.tsx
-    { id: 'discovery', icon: <Rocket size={14} />, label: '🚀 Onboarding & Interview', phase: 'Discover' },
-    { id: 'boardroom', icon: <Brain size={14} />, label: '🧠 Agent Boardroom (Live Meeting)', phase: 'Live' },
-    { id: 'dashboard', icon: <LayoutDashboard size={14} />, label: '🏢 Executive Goal Tracker', phase: 'Tracker' },
-=======
     { id: 'dashboard', icon: <LayoutDashboard size={14} />, label: 'Executive Dashboard', phase: 'Dominate' },
     { id: 'boardroom', icon: <Brain size={14} />, label: 'Agent Boardroom', phase: 'Design & Deliver' },
     { id: 'architecture', icon: <Network size={14} />, label: 'Architecture & Flows', phase: 'System' },
     { id: 'chat', icon: <MessageSquare size={14} />, label: 'AI Copilot Chat', phase: 'Chat' },
->>>>>>> Rann:frontend/src/components/Sidebar.tsx
   ];
 
   // Close menus on click outside

@@ -25,7 +25,8 @@ export interface CopilotMessage {
 type Action =
   | { type: 'INIT_DEFAULT'; businessData: BusinessData; agentOutputs: AgentOutputs; agentLog: LogEntry[] }
   | { type: 'SET_RUNNING' }
-  | { type: 'RUN_COMPLETE'; businessData: BusinessData; agentOutputs: AgentOutputs; agentLog: LogEntry[] };
+  | { type: 'RUN_COMPLETE'; businessData: BusinessData; agentOutputs: AgentOutputs; agentLog: LogEntry[] }
+  | { type: 'UPDATE_OUTPUTS'; agentOutputs: AgentOutputs; agentLog: LogEntry[] };
 
 const initialState: AegisState = {
   businessData: null,
@@ -60,6 +61,12 @@ function aegisReducer(state: AegisState, action: Action): AegisState {
         runComplete: true,
         isRunning: false,
       };
+    case 'UPDATE_OUTPUTS':
+      return {
+        ...state,
+        agentOutputs: action.agentOutputs,
+        agentLog: action.agentLog,
+      };
     default:
       return state;
   }
@@ -71,6 +78,20 @@ interface ContextProps extends AegisState {
   setCopilotOpen: (open: boolean) => void;
   copilotMessages: CopilotMessage[];
   runCopilotPrompt: (prompt: string) => void;
+  // Live Assistant parameters
+  targetRevenue: number;
+  setTargetRevenue: (val: number) => void;
+  timeframeDays: number;
+  setTimeframeDays: (val: number) => void;
+  daysRemaining: number;
+  setDaysRemaining: (val: number) => void;
+  startingCapital: number;
+  setStartingCapital: (val: number) => void;
+  simulatedRevenue: number;
+  setSimulatedRevenue: (val: number) => void;
+  recentSalesTicks: string[];
+  setRecentSalesTicks: React.Dispatch<React.SetStateAction<string[]>>;
+  isLagging: boolean;
 }
 
 const AegisContext = createContext<ContextProps | null>(null);
@@ -79,6 +100,23 @@ export function AegisProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(aegisReducer, initialState);
   const [copilotOpen, setCopilotOpen] = useState(false);
   const [copilotMessages, setCopilotMessages] = useState<CopilotMessage[]>([]);
+
+  // Live Assistant state definitions
+  const [targetRevenue, setTargetRevenue] = useState<number>(10000);
+  const [timeframeDays, setTimeframeDays] = useState<number>(30);
+  const [daysRemaining, setDaysRemaining] = useState<number>(20);
+  const [startingCapital, setStartingCapital] = useState<number>(5000);
+  const [simulatedRevenue, setSimulatedRevenue] = useState<number>(2500); // Starts lagging at $2,500
+  const [recentSalesTicks, setRecentSalesTicks] = useState<string[]>([
+    '+$75 from inbound organic trial conversion',
+    '+$120 from Outbound Email demo sign-up'
+  ]);
+
+  // Derived state to check if current revenue lags behind expected daily rate
+  const elapsedDays = timeframeDays - daysRemaining;
+  const expectedDailyRate = targetRevenue / timeframeDays;
+  const expectedRevenue = expectedDailyRate * elapsedDays;
+  const isLagging = simulatedRevenue < expectedRevenue;
 
   // Sync / initialize on client mount
   useEffect(() => {
@@ -270,6 +308,41 @@ export function AegisProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Set up live sales tick interval every 3 seconds
+  useEffect(() => {
+    if (!state.onboarded || !state.businessData) return;
+
+    const interval = setInterval(() => {
+      // Simulate a random sales tick
+      const randomSale = Math.floor(Math.random() * 120) + 30; // $30 to $150
+      setSimulatedRevenue(prev => {
+        const nextRevenue = prev + randomSale;
+        
+        // Append sales tick
+        setRecentSalesTicks(ticks => [
+          `+$${randomSale} simulated sale via Lead Gen channel`,
+          ...ticks.slice(0, 4)
+        ]);
+
+        // Dynamically run the orchestrator with the updated revenue values to refresh engine outputs
+        const updatedBusiness = {
+          ...state.businessData!,
+          target_revenue: targetRevenue,
+          timeframe_days: timeframeDays,
+          starting_capital: startingCapital,
+          simulated_revenue: nextRevenue,
+        };
+
+        const { outputs, log } = runAgentOrchestrator(updatedBusiness);
+        dispatch({ type: 'UPDATE_OUTPUTS', agentOutputs: outputs, agentLog: log });
+
+        return nextRevenue;
+      });
+    }, 3000); // 3 seconds interval!
+
+    return () => clearInterval(interval);
+  }, [state.onboarded, state.businessData, targetRevenue, timeframeDays, startingCapital]);
+
   return (
     <AegisContext.Provider
       value={{
@@ -279,6 +352,19 @@ export function AegisProvider({ children }: { children: ReactNode }) {
         setCopilotOpen,
         copilotMessages,
         runCopilotPrompt,
+        targetRevenue,
+        setTargetRevenue,
+        timeframeDays,
+        setTimeframeDays,
+        daysRemaining,
+        setDaysRemaining,
+        startingCapital,
+        setStartingCapital,
+        simulatedRevenue,
+        setSimulatedRevenue,
+        recentSalesTicks,
+        setRecentSalesTicks,
+        isLagging,
       }}
     >
       {children}
@@ -321,6 +407,7 @@ function formatBackendOutputs(backendRes: any): AgentOutputs {
         Q3: 45,
         Q4: 65
       },
+      milestone_velocity: f.Strategy?.summary || 'Roadmap generated.',
       mandate: f.Strategy?.summary || 'Roadmap generated.',
       timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
     },
@@ -385,6 +472,7 @@ function formatBackendOutputs(backendRes: any): AgentOutputs {
       ],
       customer_health: fCS.userSatisfactionScore || 88,
       market_readiness: 72,
+      feasibility_score: fFinance.feasibilityScore || 82,
       unit_economics: {
         CAC: `₹${fFinance.cac || 2500}`,
         LTV: `₹${fFinance.ltv || 15000}`,

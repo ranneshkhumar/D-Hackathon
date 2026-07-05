@@ -2,7 +2,14 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAegis } from '../context/AegisContext';
-import { Terminal, Play, RotateCcw, AlertTriangle, ShieldCheck, Cpu } from 'lucide-react';
+import { Terminal, Play, RotateCcw, AlertTriangle, ShieldCheck, Cpu, Activity } from 'lucide-react';
+import { 
+  CEO_AGENT_API_KEY, 
+  STRATEGY_AGENT_API_KEY, 
+  MARKETING_AGENT_API_KEY, 
+  SALES_AGENT_API_KEY, 
+  FINANCE_AGENT_API_KEY 
+} from '../engine/agents';
 
 interface AgentBlock {
   badge: string;
@@ -25,7 +32,7 @@ export default function BoardroomView() {
   const getAgentsChain = (): AgentBlock[] => {
     if (!agentOutputs || !businessData) return [];
 
-    const { strategy, marketing, sales, cs, analytics } = agentOutputs;
+    const { strategy, marketing, sales, finance } = agentOutputs;
 
     return [
       {
@@ -92,7 +99,7 @@ export default function BoardroomView() {
         responsibility: 'Audits budgets, flags cash-flow risks, and determines feasibility.',
         input: 'Budget capital and sales funnel numbers.',
         output: 'Risk audit signals and target feasibility checks.',
-        message: `Starting budget of $${startingCapital.toLocaleString()} audited. Flags active: ${cs.support_tickets.length} tickets. Risk check complete. Dynamic target feasibility rated at: ${cs.client_health}/100. CRM state: "${cs.crm_notes || cs.crm_status}".`,
+        message: `Starting budget of $${startingCapital.toLocaleString()} audited. Risk alerts flagged: ${finance.risk_alerts.length}. Risk check complete. Dynamic target feasibility rated at: ${finance.feasibility_score}/100. Gross Margin: ${finance.unit_economics['Gross Margin']}.`,
       },
     ];
   };
@@ -141,9 +148,7 @@ export default function BoardroomView() {
     );
   }
 
-<<<<<<< HEAD:src/components/BoardroomView.tsx
   const chain = getAgentsChain();
-=======
   const { ceo, strategy, marketing, sales, finance } = agentOutputs;
 
   const renderApiBadge = (keyPlaceholder: string) => (
@@ -251,7 +256,7 @@ export default function BoardroomView() {
         <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-3">
           <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase">Quarterly Projections</h4>
           <div className="grid grid-cols-4 gap-3">
-            {Object.entries(strategy.growth_projection).map(([q, v]) => (
+            {Object.entries(strategy.growth_projection).map(([q, v]: [string, any]) => (
               <div key={q} className="bg-neutral-50 rounded-xl p-3 text-center border border-neutral-200/60">
                 <div className="text-[9px] font-bold text-neutral-400 uppercase">{q}</div>
                 <div className="text-sm font-black text-neutral-800 mt-1">${(v/1000).toFixed(0)}K</div>
@@ -542,7 +547,6 @@ export default function BoardroomView() {
   };
 
   const renderers = [renderCEO, renderStrategy, renderMarketing, renderSales, renderFinance];
->>>>>>> Rann:frontend/src/components/BoardroomView.tsx
 
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8 overflow-y-auto max-h-screen custom-scrollbar pb-16">

@@ -8,11 +8,7 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   LineChart, Line
 } from 'recharts';
-<<<<<<< HEAD:src/components/DashboardView.tsx
-import { TrendingUp, Award, Zap, AlertTriangle, AlertCircle, DollarSign, Activity, Target, Landmark, Percent, RefreshCw, Users, ShieldAlert } from 'lucide-react';
-=======
-import { ShieldAlert, TrendingUp, Cpu, Award, Zap, AlertTriangle, AlertCircle, IndianRupee, Activity, Target, Landmark, Percent, RefreshCw } from 'lucide-react';
->>>>>>> Rann:frontend/src/components/DashboardView.tsx
+import { ShieldAlert, TrendingUp, Cpu, Award, Zap, AlertTriangle, AlertCircle, IndianRupee, DollarSign, Activity, Target, Landmark, Percent, RefreshCw, Users } from 'lucide-react';
 
 interface MetricProps {
   title: string;
@@ -66,10 +62,18 @@ export default function DashboardView() {
 
   const { ceo, strategy, marketing, sales, finance } = agentOutputs;
 
+  const riskCount = finance.risk_alerts ? finance.risk_alerts.filter((r: any) => r.level !== 'green').length : 0;
+  
+  const funnelData = sales.pipeline ? sales.pipeline.map((p: any) => ({
+    name: p.stage,
+    value: parseInt(p.conversion),
+  })) : [];
+
   // Format charts data
-  const revenueData = Object.entries(strategy.strategy.kpis).map(([k, v]) => ({
-    name: k,
-    value: parseFloat(v.replace(/[^0-9.]/g, '')) || 0,
+  const revenueData = Object.entries(strategy.growth_projection).map(([q, v]) => ({
+    quarter: q,
+    revenue: v,
+    baseline: businessData.annual_revenue,
   }));
 
   const radarData = [
@@ -97,9 +101,7 @@ export default function DashboardView() {
           LIVE GOAL STATE TRACKER ACTIVE
         </div>
       </div>
-
-<<<<<<< HEAD:src/components/DashboardView.tsx
-      {/* 🎯 LIVE TARGET TRACKER CARD */}
+      {/* 🎯 LIVE TARGET TRACKER CARD */}
       <div className="bg-white border border-neutral-200/80 rounded-2xl p-6 shadow-sm space-y-4">
         <div className="flex justify-between items-start border-b border-neutral-100 pb-3">
           <div className="flex items-center gap-2.5">
@@ -107,7 +109,78 @@ export default function DashboardView() {
             <div>
               <h3 className="text-xs font-bold text-neutral-800 uppercase tracking-wide">Live Target Tracker</h3>
               <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5 leading-none">Simulation Revenue Velocity Matrix</p>
-=======
+            </div>
+          </div>
+          <div className="flex items-center gap-4 text-right">
+            <div>
+              <div className="text-[9px] font-bold text-neutral-400 uppercase">Days Remaining</div>
+              <div className="text-sm font-black text-neutral-700">{daysRemaining} / {timeframeDays} Days</div>
+            </div>
+            <div>
+              <div className="text-[9px] font-bold text-neutral-400 uppercase">Starting Capital</div>
+              <div className="text-sm font-black text-neutral-700">${startingCapital.toLocaleString()}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Progress Bar & Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-5 items-center">
+          <div className="md:col-span-3 space-y-2">
+            <div className="flex justify-between text-xs font-bold">
+              <span className="text-neutral-500">Current Simulated Revenue: <strong className="text-neutral-800">${simulatedRevenue.toLocaleString()}</strong></span>
+              <span className="text-neutral-500">Target Revenue Goal: <strong className="text-neutral-800">${targetRevenue.toLocaleString()}</strong></span>
+            </div>
+            <div className="h-3 w-full bg-neutral-100 rounded-full overflow-hidden relative shadow-inner">
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${
+                  isLagging ? 'bg-gradient-to-r from-red-500 to-orange-500' : 'bg-gradient-to-r from-emerald-500 to-teal-500'
+                }`}
+                style={{ width: `${Math.min(100, (simulatedRevenue / targetRevenue) * 100)}%` }}
+              />
+            </div>
+            <div className="text-[10px] text-neutral-400 font-semibold flex justify-between">
+              <span>Required Trajectory Run-rate: ${(targetRevenue / timeframeDays).toFixed(0)}/day</span>
+              <span>Completion: {((simulatedRevenue / targetRevenue) * 100).toFixed(1)}%</span>
+            </div>
+          </div>
+
+          {/* CRITICAL ALERTS WINDOW */}
+          <div className="flex flex-col items-center justify-center p-3 rounded-xl border border-neutral-100 min-h-[75px] text-center bg-neutral-50/50">
+            {isLagging ? (
+              <div className="text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded-xl text-[11px] font-bold animate-pulse space-y-1">
+                <div className="flex items-center justify-center gap-1">
+                  <ShieldAlert size={12} className="text-red-500 shrink-0" />
+                  <span>🔴 Lagging - Pivot Needed</span>
+                </div>
+                <div className="text-[9px] font-medium text-neutral-400 lowercase leading-tight">
+                  Triggered by CEO & Finance Agents
+                </div>
+              </div>
+            ) : (
+              <div className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-xl text-[11px] font-bold">
+                🟢 Trajectory Normal <br /> Target within reach
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Live Automated Sales Counter List */}
+        <div className="bg-neutral-50 border border-neutral-200/60 rounded-xl p-3.5 space-y-2">
+          <div className="text-[9px] font-bold text-neutral-400 uppercase flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+            Simulated Incoming Sales Ticks (Updates Live every 3s)
+          </div>
+          <div className="space-y-1.5 max-h-[85px] overflow-y-auto custom-scrollbar">
+            {recentSalesTicks.map((tick, idx) => (
+              <div key={idx} className="flex gap-2 items-center text-[10px] font-mono text-neutral-500">
+                <span className="text-emerald-500 font-bold">✓</span>
+                <span>{tick}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* 9 Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {/* Row 1 */}
@@ -185,131 +258,15 @@ export default function DashboardView() {
         <span className="text-[10px] font-bold tracking-wider text-neutral-400 uppercase">CEO Agent · Executive Brief</span>
         <div className="bg-white border border-neutral-200/80 rounded-2xl p-6 shadow-sm flex gap-4 items-start">
           <span className="text-3xl shrink-0">👔</span>
-          <div className="space-y-2">
+          <div className="space-y-2 flex-1">
             <h4 className="text-xs font-bold text-neutral-700">Strategic Mandate</h4>
             <div className="text-xs font-medium text-blue-600 italic bg-blue-50/50 border border-blue-100 border-l-4 border-l-blue-500 rounded-xl px-4 py-3">
               &quot;{ceo.mandate}&quot;
->>>>>>> Rann:frontend/src/components/DashboardView.tsx
             </div>
-          </div>
-          <div className="flex items-center gap-4 text-right">
-            <div>
-              <div className="text-[9px] font-bold text-neutral-400 uppercase">Days Remaining</div>
-              <div className="text-sm font-black text-neutral-700">{daysRemaining} / {timeframeDays} Days</div>
-            </div>
-            <div>
-              <div className="text-[9px] font-bold text-neutral-400 uppercase">Starting Capital</div>
-              <div className="text-sm font-black text-neutral-700">${startingCapital.toLocaleString()}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Progress Bar & Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-5 items-center">
-          <div className="md:col-span-3 space-y-2">
-            <div className="flex justify-between text-xs font-bold">
-              <span className="text-neutral-500">Current Simulated Revenue: <strong className="text-neutral-800">${simulatedRevenue.toLocaleString()}</strong></span>
-              <span className="text-neutral-500">Target Revenue Goal: <strong className="text-neutral-800">${targetRevenue.toLocaleString()}</strong></span>
-            </div>
-            <div className="h-3 w-full bg-neutral-100 rounded-full overflow-hidden relative shadow-inner">
-              <div
-                className={`h-full rounded-full transition-all duration-300 ${
-                  isLagging ? 'bg-gradient-to-r from-red-500 to-orange-500' : 'bg-gradient-to-r from-emerald-500 to-teal-500'
-                }`}
-                style={{ width: `${Math.min(100, (simulatedRevenue / targetRevenue) * 100)}%` }}
-              />
-            </div>
-            <div className="text-[10px] text-neutral-400 font-semibold flex justify-between">
-              <span>Required Trajectory Run-rate: ${(targetRevenue / timeframeDays).toFixed(0)}/day</span>
-              <span>Completion: {((simulatedRevenue / targetRevenue) * 100).toFixed(1)}%</span>
-            </div>
-          </div>
-
-          {/* CRITICAL ALERTS WINDOW */}
-          <div className="flex flex-col items-center justify-center p-3 rounded-xl border border-neutral-100 min-h-[75px] text-center bg-neutral-50/50">
-            {isLagging ? (
-              <div className="text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded-xl text-[11px] font-bold animate-pulse space-y-1">
-                <div className="flex items-center justify-center gap-1">
-                  <ShieldAlert size={12} className="text-red-500 shrink-0" />
-                  <span>🔴 Lagging - Pivot Needed</span>
-                </div>
-                <div className="text-[9px] font-medium text-neutral-400 lowercase leading-tight">
-                  Triggered by CEO & Finance Agents
-                </div>
-              </div>
-            ) : (
-              <div className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-xl text-[11px] font-bold">
-                🟢 Trajectory Normal <br /> Target within reach
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Live Automated Sales Counter List */}
-        <div className="bg-neutral-50 border border-neutral-200/60 rounded-xl p-3.5 space-y-2">
-          <div className="text-[9px] font-bold text-neutral-400 uppercase flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-            Simulated Incoming Sales Ticks (Updates Live every 3s)
-          </div>
-          <div className="space-y-1.5 max-h-[85px] overflow-y-auto custom-scrollbar">
-            {recentSalesTicks.map((tick, idx) => (
-              <div key={idx} className="flex gap-2 items-center text-[10px] font-mono text-neutral-500">
-                <span className="text-emerald-500 font-bold">✓</span>
-                <span>{tick}</span>
-              </div>
-            ))}
           </div>
         </div>
       </div>
 
-<<<<<<< HEAD:src/components/DashboardView.tsx
-      {/* RENDER METRIC CARDS (exactly 6 grid cards as requested) */}
-      <div className="space-y-3">
-        <span className="text-[10px] font-bold tracking-wider text-neutral-400 uppercase">Operational Performance Scores</span>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          <MetricCard
-            title="Business Health Score"
-            value={`${ceo.health_score}/100`}
-            sub="Simulated corporate strength index"
-            color={ceo.health_score >= 80 ? 'text-green-600' : 'text-amber-500'}
-            icon={<Activity size={16} />}
-          />
-          <MetricCard
-            title="Growth Score"
-            value={`${ceo.growth_score}/100`}
-            sub="Simulated business scale trajectory"
-            color="text-blue-600"
-            icon={<TrendingUp size={16} />}
-          />
-          <MetricCard
-            title="Current Revenue Opportunity"
-            value={`$${(finance.revenue_opportunity / 1000).toFixed(0)}K`}
-            sub="Identified under active positioning"
-            color="text-emerald-600"
-            icon={<DollarSign size={16} />}
-          />
-          <MetricCard
-            title="Lead Score"
-            value={`${sales.lead_score}/100`}
-            sub="Simulated outbound ICP qualify index"
-            color="text-violet-600"
-            icon={<Target size={16} />}
-          />
-          <MetricCard
-            title="Customer Health"
-            value={`${finance.feasibility_score}/100`}
-            sub="Audit score mapped by CS/Finance"
-            color="text-orange-500"
-            icon={<Award size={16} />}
-          />
-          <MetricCard
-            title="Market Readiness"
-            value={`${Math.min(100, finance.feasibility_score + 2)}/100`}
-            sub="Category placement readiness index"
-            color="text-cyan-600"
-            icon={<RefreshCw size={16} />}
-          />
-=======
       {/* Charts Block 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
@@ -332,12 +289,9 @@ export default function DashboardView() {
               </AreaChart>
             </ResponsiveContainer>
           </div>
->>>>>>> Rann:frontend/src/components/DashboardView.tsx
         </div>
-      </div>
 
-      {/* Radar Competitors Map */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
+        {/* Radar Competitors Map */}
         <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
           <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase">Core Positioning Benchmarks</h4>
           <div className="h-[220px] w-full flex justify-center">
@@ -351,13 +305,8 @@ export default function DashboardView() {
             </ResponsiveContainer>
           </div>
         </div>
+      </div>
 
-<<<<<<< HEAD:src/components/DashboardView.tsx
-        <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4 flex flex-col justify-center">
-          <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase pb-2 border-b border-neutral-100">
-            CEO Strategic Directive
-          </h4>
-=======
       {/* Charts Block 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
@@ -413,22 +362,26 @@ export default function DashboardView() {
 
         <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
           <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase">Risk Alerts — Finance Agent</h4>
->>>>>>> Rann:frontend/src/components/DashboardView.tsx
           <div className="space-y-3">
-            <div className={`text-xs font-bold italic p-3 border border-l-4 rounded-xl ${
-              isLagging
-                ? 'text-red-700 bg-red-50/50 border-red-200 border-l-red-500'
-                : 'text-emerald-700 bg-emerald-50/50 border-emerald-200 border-l-emerald-500'
-            }`}>
-              &quot;{ceo.mandate}&quot;
-            </div>
-            <p className="text-xs text-neutral-500 leading-relaxed font-medium">
-              {ceo.summary} Based on daily target computations, the Strategy Agent calculates the milestone velocity to ensure goal realization within target timeframes.
-            </p>
+            {finance.risk_alerts.map((alert: any, idx: number) => (
+              <div key={idx} className="flex gap-2.5 items-start text-xs border border-neutral-100 p-3 rounded-xl bg-neutral-50/30">
+                <span className="text-base shrink-0">⚠️</span>
+                <div>
+                  <div className="font-bold text-neutral-700 flex items-center gap-1.5 uppercase tracking-wide text-[10px]">
+                    {alert.title}
+                    <span className={`text-[8px] px-1.5 py-0.5 rounded-full font-bold leading-none ${
+                      alert.level === 'red' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-amber-50 text-amber-600 border border-amber-100'
+                    }`}>
+                      {alert.level}
+                    </span>
+                  </div>
+                  <p className="text-neutral-500 mt-1 leading-relaxed text-[11px] font-medium">{alert.desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
-
     </div>
   );
 }

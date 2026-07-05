@@ -28,6 +28,13 @@ export interface StrategyPillars {
 export interface StrategyOutput {
   strategy: StrategyPillars;
   milestone_velocity: string;
+  mandate: string;
+  growth_projection: {
+    Q1: number;
+    Q2: number;
+    Q3: number;
+    Q4: number;
+  };
   timestamp: string;
 }
 
@@ -73,6 +80,12 @@ export interface SalesOutput {
   }>;
   discovery_script: string;
   lead_score: number;
+  lead_score_criteria: Array<{
+    factor: string;
+    weight: string;
+    score_range: string;
+  }>;
+  revenue_opportunity: number;
   timestamp: string;
 }
 
@@ -86,8 +99,17 @@ export interface FinanceOutput {
     desc: string;
     level: 'red' | 'amber' | 'green';
   }>;
-  revenue_opportunity: number;
   feasibility_score: number;
+  customer_health: number;
+  market_readiness: number;
+  unit_economics: {
+    CAC: string;
+    LTV: string;
+    'LTV:CAC Ratio': string;
+    'Payback Period': string;
+    'Gross Margin': string;
+    'Burn Multiple': string;
+  };
   timestamp: string;
 }
 
@@ -135,6 +157,17 @@ function checkLag(businessData: BusinessData): boolean {
   return current < expectedRevenue;
 }
 
+const industryContextMap: Record<string, string[]> = {
+  Technology: ['SaaS expansion', 'developer-led growth', 'ARR acceleration'],
+  Healthcare: ['patient acquisition', 'compliance-first growth', 'value-based care'],
+  'Retail / E-Commerce': ['omnichannel dominance', 'AOV optimization', 'retention flywheel'],
+  'Financial Services': ['AUM growth', 'regulatory arbitrage', 'fintech disruption'],
+  Education: ['learner acquisition', 'outcome-based positioning', 'cohort monetization'],
+  Manufacturing: ['operational efficiency', 'supply chain resilience', 'B2B pipeline'],
+  'Real Estate': ['deal velocity', 'portfolio diversification', 'proptech integration'],
+  'Consulting / Professional Services': ['retainer growth', 'thought leadership', 'IP monetization'],
+};
+
 // ─────────────────────────────────────────────
 // 1. CEO AGENT
 // ─────────────────────────────────────────────
@@ -150,11 +183,16 @@ export const CEO_Agent = {
     const timeframe = businessData.timeframe_days || 30;
     const isLagging = checkLag(businessData);
 
-<<<<<<< HEAD:src/engine/agents.ts
+    const industry = businessData.industry || 'Technology';
+    const company = businessData.company_name || 'Your Company';
+    const revenue = businessData.annual_revenue || 1000000;
+    const audience = businessData.target_audience || 'SMBs';
+
     let mandate = `Directing strategy & implementation units to coordinate and achieve the milestone target goal of $${target.toLocaleString()} over a timeframe of ${timeframe} days.`;
     if (isLagging) {
       mandate = `🔴 Lagging Behind Goal - Strategy Pivot Needed: Ordering immediate pricing bundle adjustments and flash marketing campaigns to recover trajectory!`;
-=======
+    }
+
     const ctx = industryContextMap[industry] || ['market expansion', 'customer acquisition', 'revenue diversification'];
 
     let summary = `${company} is positioned at a critical inflection point within the ${industry} sector. ` +
@@ -170,14 +208,13 @@ export const CEO_Agent = {
 
     if (customPrompt) {
       summary += `\n\n[Master Copilot Strategic Directive]: Resolving user analysis request: "${customPrompt}". CEO mandate has been configured to prioritize this objective.`;
->>>>>>> Rann:frontend/src/engine/agents.ts
     }
 
     return {
       health_score: isLagging ? rand(68, 76) : rand(84, 96),
       growth_score: isLagging ? rand(62, 70) : rand(82, 95),
       mandate,
-      summary: `CEO mandate initiated to establish and scale ${businessData.company_name} target metrics in the ${businessData.industry} sector.`,
+      summary,
       timestamp: now(),
     };
   },
@@ -209,9 +246,18 @@ export const Strategy_Agent = {
       competitive_moat: 'High switching costs via deep product integrations',
     };
 
+    const growth_projection = {
+      Q1: Math.round(target * 0.15),
+      Q2: Math.round(target * 0.3),
+      Q3: Math.round(target * 0.55),
+      Q4: Math.round(target * 0.85),
+    };
+
     return {
       strategy,
       milestone_velocity: `Required rate: $${dailyRate} per day to hit target goal within ${timeframe} days.`,
+      mandate: `Required rate: $${dailyRate} per day to hit target goal.`,
+      growth_projection,
       timestamp: now(),
     };
   },
@@ -263,6 +309,7 @@ export const Sales_Agent = {
   run(businessData: BusinessData, customPrompt?: string): SalesOutput {
     const isLagging = checkLag(businessData);
     const company = businessData.company_name || 'Your Company';
+    const target = businessData.target_revenue || 10000;
 
     const pipeline = [
       { stage: 'ICP Discovery', conversion: '100%', avg_days: 0, action: 'Lead scoring pipeline' },
@@ -278,11 +325,19 @@ export const Sales_Agent = {
       discovery_script += `\n\n[🔴 Pivot active script override]:\n"Since we are running an end-of-week implementation pilot, we can waive our B2B onboarding fee. Can I secure this pilot slot for you today?"`;
     }
 
+    const lead_score_criteria = [
+      { factor: 'Industry alignment', weight: '40%', score_range: 'High fit' },
+      { factor: 'Annual revenue scale', weight: '30%', score_range: 'MSME' },
+      { factor: 'Employee count size', weight: '30%', score_range: 'Growing team' }
+    ];
+
     return {
       pipeline,
       outbound_sequence,
       discovery_script,
       lead_score: isLagging ? rand(60, 80) : rand(75, 96),
+      lead_score_criteria,
+      revenue_opportunity: Math.round(target * (isLagging ? 0.75 : 1.35)),
       timestamp: now(),
     };
   },
@@ -304,22 +359,15 @@ export const Finance_Agent = {
     const current = businessData.simulated_revenue || 2500;
     const isLagging = checkLag(businessData);
 
-<<<<<<< HEAD:src/engine/agents.ts
-    const cash_flow = Array.from({ length: 6 }, (_, i) => ({
-      month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'][i],
-      value: Math.round((capital / 6) * (1 + randFloat(-0.05, 0.15))),
-    }));
+    const industry = businessData.industry || 'Technology';
+    const revenue = businessData.annual_revenue || 1000000;
 
-    const risk_alerts = [
-      {
-        title: isLagging ? '🔴 Cash flow trajectory warning' : '🟢 Budget within parameters',
-        desc: isLagging
-          ? `Current simulated revenue of $${current.toLocaleString()} lags behind target baseline rate.`
-          : `Budget allocation of $${capital.toLocaleString()} is stable.`,
-        level: isLagging ? 'red' as const : 'green' as const,
-      },
-    ];
-=======
+    interface RiskAlert {
+      level: 'red' | 'amber' | 'green';
+      title: string;
+      desc: string;
+    }
+
     const riskTemplates: Record<string, RiskAlert[]> = {
       Technology: [
         { level: 'red', title: 'Churn Rate Threshold', desc: 'Simulated churn rate at 8.2% — above SaaS benchmark of 5%. Immediate retention intervention required.' },
@@ -367,13 +415,14 @@ export const Finance_Agent = {
       'Gross Margin': `${rand(55, 78)}%`,
       'Burn Multiple': `${randFloat(0.8, 2.4).toFixed(1)}x`,
     };
->>>>>>> Rann:frontend/src/engine/agents.ts
 
     return {
       cash_flow,
       risk_alerts,
-      revenue_opportunity: Math.round(target * (isLagging ? 0.75 : 1.35)),
+      customer_health: isLagging ? rand(55, 68) : rand(75, 96),
+      market_readiness: isLagging ? rand(60, 72) : rand(80, 95),
       feasibility_score: isLagging ? rand(58, 68) : rand(80, 96),
+      unit_economics,
       timestamp: now(),
     };
   },
@@ -424,10 +473,7 @@ export function runAgentOrchestrator(businessData: BusinessData, customPrompt?: 
   addLog('Sales Agent', 'Drafting sales scripts, outbound touchpoints, and cold email templates.', '#f97316');
   const sales = Sales_Engine_Proxy.run(businessData, customPrompt);
   outputs.sales = sales;
-<<<<<<< HEAD:src/engine/agents.ts
-=======
   addLog('Sales Agent', `✅ Revenue opportunity identified: ₹${sales.revenue_opportunity.toLocaleString()}`, '#10b981');
->>>>>>> Rann:frontend/src/engine/agents.ts
 
   // 5. Finance Agent
   addLog('Finance Agent', 'CFO budget audit. Mapping operational cash flows and feasibility metrics.', '#ef4444');

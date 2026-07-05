@@ -189,11 +189,8 @@ function WorkspaceContent() {
     switch (activeView) {
       case 'dashboard':
         return <DashboardView />;
-<<<<<<< HEAD:src/app/page.tsx
       case 'discovery':
         return <DiscoveryView onSuccessRedirect={() => setActiveView('boardroom')} />;
-=======
->>>>>>> Rann:frontend/src/app/page.tsx
       case 'boardroom':
         return <BoardroomView />;
       case 'architecture':
@@ -207,7 +204,6 @@ function WorkspaceContent() {
 
   // Render Dashboard Workspace once active organization is created/selected
   return (
-<<<<<<< HEAD:src/app/page.tsx
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-neutral-50 relative">
       {/* Persistent warning disclaimer banner at top of all screens */}
       <div className="bg-amber-500 text-neutral-950 text-center py-2 px-4 text-[10px] font-black tracking-wide uppercase border-b border-amber-600 shadow-sm z-[999] select-none shrink-0">
@@ -222,20 +218,8 @@ function WorkspaceContent() {
           onResetWorkspace={handleResetWorkspace}
           activeView={activeView}
           onSelectView={setActiveView}
+          onDeleteOrg={handleDeleteOrg}
         />
-=======
-    <div className="flex h-screen w-screen overflow-hidden bg-neutral-50 relative">
-      <Sidebar
-        organizations={organizations}
-        activeOrg={activeOrg}
-        onSelectOrg={handleSelectOrg}
-        onCreateOrgClick={() => setIsModalOpen(true)}
-        onResetWorkspace={handleResetWorkspace}
-        activeView={activeView}
-        onSelectView={setActiveView}
-        onDeleteOrg={handleDeleteOrg}
-      />
->>>>>>> Rann:frontend/src/app/page.tsx
       
       {/* Main View Shell */}
       <div className="flex-1 flex flex-col min-w-0 bg-neutral-50 overflow-hidden relative">
@@ -315,11 +299,7 @@ function WorkspaceContent() {
                         {isUser ? (
                           <p>{msg.text}</p>
                         ) : (
-<<<<<<< HEAD:src/app/page.tsx
-                          <div className="markdown-body text-[11.5px] prose prose-xs">
-=======
                           <div className="markdown-body text-[11.5px]">
->>>>>>> Rann:frontend/src/app/page.tsx
                             <ReactMarkdown>{msg.text}</ReactMarkdown>
                           </div>
                         )}
