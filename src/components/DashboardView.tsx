@@ -8,7 +8,7 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   LineChart, Line
 } from 'recharts';
-import { ShieldAlert, TrendingUp, Cpu, Award, Zap, AlertTriangle, AlertCircle, DollarSign, Activity, Target, Landmark, Percent, RefreshCw, MessageSquare, Users } from 'lucide-react';
+import { TrendingUp, Award, Zap, AlertTriangle, AlertCircle, DollarSign, Activity, Target, Landmark, Percent, RefreshCw, Users, ShieldAlert } from 'lucide-react';
 
 interface MetricProps {
   title: string;
@@ -55,26 +55,26 @@ export default function DashboardView() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[300px] gap-3 text-neutral-400 font-medium">
         <Activity className="animate-spin text-neutral-400" size={24} />
-        Initializing Aegis Dashboard...
+        Initializing Executive Goal Tracker...
       </div>
     );
   }
 
-  const { strategy, marketing, leadgen, sales, analytics, cs } = agentOutputs;
+  const { ceo, strategy, marketing, sales, finance } = agentOutputs;
 
   // Format charts data
-  const revenueData = Object.entries(analytics.growth_projection).map(([q, v]) => ({
-    quarter: q,
-    revenue: v,
-    baseline: businessData.annual_revenue,
+  const revenueData = Object.entries(strategy.strategy.kpis).map(([k, v]) => ({
+    name: k,
+    value: parseFloat(v.replace(/[^0-9.]/g, '')) || 0,
   }));
 
-  const radarData = analytics.radar_scores;
-
-  const funnelData = sales.pipeline.map(p => ({
-    name: p.stage,
-    value: parseInt(p.conversion),
-  }));
+  const radarData = [
+    { subject: 'Market Fit', value: ceo.health_score },
+    { subject: 'Brand Auth', value: Math.round(ceo.health_score * 0.88) },
+    { subject: 'Sales Vel', value: Math.round(ceo.growth_score * 0.95) },
+    { subject: 'Retention', value: Math.round(finance.feasibility_score * 0.9) },
+    { subject: 'Readiness', value: Math.round(finance.feasibility_score * 0.95) },
+  ];
 
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8 overflow-y-auto max-h-screen custom-scrollbar pb-16">
@@ -82,26 +82,26 @@ export default function DashboardView() {
       {/* Header */}
       <div className="flex justify-between items-start">
         <div>
-          <span className="text-[10px] font-bold tracking-widest text-neutral-400 uppercase">5D Framework · Dominate Phase</span>
-          <h1 className="text-3xl font-extrabold tracking-tight text-neutral-800 mt-1">Executive Dashboard</h1>
+          <span className="text-[10px] font-bold tracking-widest text-neutral-400 uppercase">5D Framework · Executive Tracking</span>
+          <h1 className="text-3xl font-extrabold tracking-tight text-neutral-800 mt-1">Executive Goal Tracker</h1>
           <p className="text-xs text-neutral-400 mt-1">
-            Live business intelligence for <strong className="text-neutral-600">{businessData.company_name}</strong> — {businessData.industry} · {businessData.primary_goal}
+            Live business intelligence & simulated targets for <strong className="text-neutral-600">{businessData.company_name}</strong>.
           </p>
         </div>
-        <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-full shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          STARTUP ASSISTANT ONLINE
+        <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-full shrink-0 animate-pulse">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          LIVE GOAL STATE TRACKER ACTIVE
         </div>
       </div>
 
-      {/* 🎯 Live Goal Tracker */}
+      {/* 🎯 LIVE TARGET TRACKER CARD */}
       <div className="bg-white border border-neutral-200/80 rounded-2xl p-6 shadow-sm space-y-4">
         <div className="flex justify-between items-start border-b border-neutral-100 pb-3">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <span className="text-xl">🎯</span>
             <div>
-              <h3 className="text-xs font-bold text-neutral-800 uppercase tracking-wide">Live Goal Tracker</h3>
-              <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5">Personal Assistant Live-Tracking Simulator</p>
+              <h3 className="text-xs font-bold text-neutral-800 uppercase tracking-wide">Live Target Tracker</h3>
+              <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5 leading-none">Simulation Revenue Velocity Matrix</p>
             </div>
           </div>
           <div className="flex items-center gap-4 text-right">
@@ -117,13 +117,13 @@ export default function DashboardView() {
         </div>
 
         {/* Progress Bar & Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-5 items-center">
           <div className="md:col-span-3 space-y-2">
             <div className="flex justify-between text-xs font-bold">
               <span className="text-neutral-500">Current Simulated Revenue: <strong className="text-neutral-800">${simulatedRevenue.toLocaleString()}</strong></span>
               <span className="text-neutral-500">Target Revenue Goal: <strong className="text-neutral-800">${targetRevenue.toLocaleString()}</strong></span>
             </div>
-            <div className="h-3 w-full bg-neutral-100 rounded-full overflow-hidden relative">
+            <div className="h-3 w-full bg-neutral-100 rounded-full overflow-hidden relative shadow-inner">
               <div
                 className={`h-full rounded-full transition-all duration-300 ${
                   isLagging ? 'bg-gradient-to-r from-red-500 to-orange-500' : 'bg-gradient-to-r from-emerald-500 to-teal-500'
@@ -131,32 +131,37 @@ export default function DashboardView() {
                 style={{ width: `${Math.min(100, (simulatedRevenue / targetRevenue) * 100)}%` }}
               />
             </div>
-            <div className="text-[10px] text-neutral-400 font-medium flex justify-between">
-              <span>Expected Daily Rate: ${(targetRevenue / timeframeDays).toFixed(0)}/day</span>
-              <span>Progress: {((simulatedRevenue / targetRevenue) * 100).toFixed(1)}%</span>
+            <div className="text-[10px] text-neutral-400 font-semibold flex justify-between">
+              <span>Required Trajectory Run-rate: ${(targetRevenue / timeframeDays).toFixed(0)}/day</span>
+              <span>Completion: {((simulatedRevenue / targetRevenue) * 100).toFixed(1)}%</span>
             </div>
           </div>
 
-          {/* Lagging alert status */}
-          <div className="flex flex-col items-center justify-center p-3 rounded-xl border border-neutral-100 min-h-[70px] text-center bg-neutral-50/50">
+          {/* CRITICAL ALERTS WINDOW */}
+          <div className="flex flex-col items-center justify-center p-3 rounded-xl border border-neutral-100 min-h-[75px] text-center bg-neutral-50/50">
             {isLagging ? (
-              <div className="text-red-650 text-red-650 bg-red-50 border border-red-100 px-3 py-2 rounded-xl text-[11px] font-bold animate-pulse flex items-center gap-1">
-                <span className="w-2 h-2 bg-red-500 rounded-full shrink-0 animate-ping" />
-                <span>🔴 Lagging Behind Goal<br />Strategy Pivot Needed</span>
+              <div className="text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded-xl text-[11px] font-bold animate-pulse space-y-1">
+                <div className="flex items-center justify-center gap-1">
+                  <ShieldAlert size={12} className="text-red-500 shrink-0" />
+                  <span>🔴 Lagging - Pivot Needed</span>
+                </div>
+                <div className="text-[9px] font-medium text-neutral-400 lowercase leading-tight">
+                  Triggered by CEO & Finance Agents
+                </div>
               </div>
             ) : (
-              <div className="text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-2 rounded-xl text-[11px] font-bold">
-                🟢 Trajectory Healthy <br /> Goal within reach
+              <div className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-xl text-[11px] font-bold">
+                🟢 Trajectory Normal <br /> Target within reach
               </div>
             )}
           </div>
         </div>
 
-        {/* Live Simulated Incoming Sales ticker */}
+        {/* Live Automated Sales Counter List */}
         <div className="bg-neutral-50 border border-neutral-200/60 rounded-xl p-3.5 space-y-2">
           <div className="text-[9px] font-bold text-neutral-400 uppercase flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-            Simulated Sales Ledger (Live Ticks)
+            Simulated Incoming Sales Ticks (Updates Live every 3s)
           </div>
           <div className="space-y-1.5 max-h-[85px] overflow-y-auto custom-scrollbar">
             {recentSalesTicks.map((tick, idx) => (
@@ -169,125 +174,59 @@ export default function DashboardView() {
         </div>
       </div>
 
-      {/* 9 Metric Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {/* Row 1 */}
-        <MetricCard
-          title="Client Health Index"
-          value={`${cs.client_health}/100`}
-          sub="Customer success analytics"
-          color={cs.client_health >= 85 ? 'text-green-600' : 'text-amber-500'}
-          icon={<Users size={16} />}
-        />
-        <MetricCard
-          title="Projected Q4 Revenue"
-          value={`$${(analytics.growth_projection.Q4 / 1000).toFixed(0)}K`}
-          sub={`Baseline $${(businessData.annual_revenue / 1000).toFixed(0)}K`}
-          color="text-blue-600"
-          icon={<TrendingUp size={16} />}
-        />
-        <MetricCard
-          title="Lead Score Index"
-          value={`${sales.lead_score}/100`}
-          sub="ICP lead Gen qualification"
-          color="text-violet-600"
-          icon={<Target size={16} />}
-        />
-
-        {/* Row 2 */}
-        <MetricCard
-          title="Active Support Tickets"
-          value={cs.support_tickets.filter(t => t.status !== 'resolved').length}
-          sub={`${cs.support_tickets.length} total tickets logged`}
-          color="text-amber-500"
-          icon={<AlertTriangle size={16} />}
-        />
-        <MetricCard
-          title="Revenue Opportunity"
-          value={`$${(analytics.revenue_opportunity / 1000).toFixed(0)}K`}
-          sub="Identified by Analytics Engine"
-          color="text-emerald-600"
-          icon={<DollarSign size={16} />}
-        />
-        <MetricCard
-          title="Lead Gen Conversion"
-          value={`${leadgen.conversion_rate}%`}
-          sub={`Target leads: ${leadgen.projected_leads}`}
-          color="text-orange-500"
-          icon={<Award size={16} />}
-        />
-
-        {/* Row 3 */}
-        <MetricCard
-          title="Cust. Acquisition Cost (CAC)"
-          value="$340"
-          sub="Average lead acquisition cost"
-          color="text-neutral-800"
-          icon={<Percent size={15} />}
-        />
-        <MetricCard
-          title="Customer Lifetime Value (LTV)"
-          value="$4,200"
-          sub="Contract lifecycle revenue"
-          color="text-neutral-800"
-          icon={<Landmark size={15} />}
-        />
-        <MetricCard
-          title="LTV:CAC Ratio"
-          value="12.4x"
-          sub="Unit economic yield health"
-          color="text-neutral-800"
-          icon={<RefreshCw size={15} />}
-        />
-      </div>
-
-      {/* Strategy Engine mandate Panel */}
+      {/* RENDER METRIC CARDS (exactly 6 grid cards as requested) */}
       <div className="space-y-3">
-        <span className="text-[10px] font-bold tracking-wider text-neutral-400 uppercase">Strategy Engine · Executive Brief</span>
-        <div className="bg-white border border-neutral-200/80 rounded-2xl p-6 shadow-sm flex gap-4 items-start">
-          <span className="text-3xl shrink-0">🧭</span>
-          <div className="space-y-2 flex-1">
-            <h4 className="text-xs font-bold text-neutral-700">Primary Positioning Strategy</h4>
-            <div className={`text-xs font-medium italic border rounded-xl px-4 py-3 border-l-4 ${
-              isLagging
-                ? 'text-red-700 bg-red-50/50 border-red-200 border-l-red-500'
-                : 'text-blue-600 bg-blue-50/50 border-blue-100 border-l-blue-500'
-            }`}>
-              &quot;{strategy.strategy.primary}&quot;
-            </div>
-            <p className="text-xs leading-relaxed text-neutral-500">
-              Target Markets: {strategy.strategy.markets.join(', ')} · Competitive Moat: {strategy.strategy.competitive_moat}
-            </p>
-          </div>
+        <span className="text-[10px] font-bold tracking-wider text-neutral-400 uppercase">Operational Performance Scores</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <MetricCard
+            title="Business Health Score"
+            value={`${ceo.health_score}/100`}
+            sub="Simulated corporate strength index"
+            color={ceo.health_score >= 80 ? 'text-green-600' : 'text-amber-500'}
+            icon={<Activity size={16} />}
+          />
+          <MetricCard
+            title="Growth Score"
+            value={`${ceo.growth_score}/100`}
+            sub="Simulated business scale trajectory"
+            color="text-blue-600"
+            icon={<TrendingUp size={16} />}
+          />
+          <MetricCard
+            title="Current Revenue Opportunity"
+            value={`$${(finance.revenue_opportunity / 1000).toFixed(0)}K`}
+            sub="Identified under active positioning"
+            color="text-emerald-600"
+            icon={<DollarSign size={16} />}
+          />
+          <MetricCard
+            title="Lead Score"
+            value={`${sales.lead_score}/100`}
+            sub="Simulated outbound ICP qualify index"
+            color="text-violet-600"
+            icon={<Target size={16} />}
+          />
+          <MetricCard
+            title="Customer Health"
+            value={`${finance.feasibility_score}/100`}
+            sub="Audit score mapped by CS/Finance"
+            color="text-orange-500"
+            icon={<Award size={16} />}
+          />
+          <MetricCard
+            title="Market Readiness"
+            value={`${Math.min(100, finance.feasibility_score + 2)}/100`}
+            sub="Category placement readiness index"
+            color="text-cyan-600"
+            icon={<RefreshCw size={16} />}
+          />
         </div>
       </div>
 
-      {/* Charts Block 1 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Radar Competitors Map */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
         <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
-          <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase">Revenue Growth Projection</h4>
-          <div className="h-[220px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0071e3" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#0071e3" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f5" />
-                <XAxis dataKey="quarter" tick={{ fontSize: 10, fill: '#86868b' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#86868b' }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v/1000).toFixed(0)}K`} />
-                <Tooltip formatter={(value: number | string) => [`$${Number(value).toLocaleString()}`, 'Projected Revenue']} />
-                <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#0071e3" fill="url(#revGrad)" strokeWidth={2} dot={{ fill: '#0071e3', r: 4 }} />
-                <Line type="monotone" dataKey="baseline" name="Baseline" stroke="#e8e8ed" strokeDasharray="4 4" strokeWidth={1} dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
-          <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase">Competitive Intelligence Radar</h4>
+          <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase">Core Positioning Benchmarks</h4>
           <div className="h-[220px] w-full flex justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={radarData}>
@@ -299,78 +238,22 @@ export default function DashboardView() {
             </ResponsiveContainer>
           </div>
         </div>
-      </div>
 
-      {/* Charts Block 2 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
-          <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase">Cash Flow Projection (12 Months)</h4>
-          <div className="h-[200px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={analytics.cash_flow} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="cfGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f5" />
-                <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#86868b' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#86868b' }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v/1000).toFixed(0)}K`} />
-                <Tooltip formatter={(value: number | string) => [`$${Number(value).toLocaleString()}`, 'Projected Cash Flow']} />
-                <Area type="monotone" dataKey="value" name="Cash Flow" stroke="#10b981" fill="url(#cfGrad)" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
-          <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase">Sales Pipeline Funnel</h4>
-          <div className="h-[200px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={funnelData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f5" horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 9, fill: '#86868b' }} axisLine={false} tickLine={false} domain={[0, 100]} tickFormatter={v => `${v}%`} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: '#86868b' }} axisLine={false} tickLine={false} width={80} />
-                <Tooltip formatter={(v: number | string) => [`${v}%`, 'Conversion Rate']} />
-                <Bar dataKey="value" name="Conversion" fill="#0071e3" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      {/* Unit Economics & Risk Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
-          <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase">CRM Portal & Chatbot Status</h4>
-          <div className="bg-neutral-50 border border-neutral-200/60 p-4 rounded-xl space-y-2 text-xs font-medium">
-            <div className="text-[10px] font-bold text-neutral-400 uppercase">CS Engine CRM Status</div>
-            <div className="text-neutral-700 font-bold">{cs.crm_status}</div>
-            <div className="text-[10px] font-bold text-neutral-400 uppercase mt-4">AI Chatbot Prompt Instructions</div>
-            <p className="text-neutral-500 font-mono leading-relaxed bg-white border border-neutral-100 p-2.5 rounded-lg">{cs.chatbot_notes}</p>
-          </div>
-        </div>
-
-        <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
-          <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase">Support Portal Tickets — CS Engine</h4>
+        <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4 flex flex-col justify-center">
+          <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase pb-2 border-b border-neutral-100">
+            CEO Strategic Directive
+          </h4>
           <div className="space-y-3">
-            {cs.support_tickets.map((t, idx) => {
-              const isOpen = t.status === 'open';
-              const isPending = t.status === 'pending';
-              return (
-                <div key={t.id} className={`flex justify-between items-center border border-neutral-100 p-3 rounded-xl hover:bg-neutral-50/40`}>
-                  <div className="flex gap-2.5 items-center">
-                    <span className={`w-2 h-2 rounded-full shrink-0 ${isOpen ? 'bg-red-500 animate-pulse' : isPending ? 'bg-amber-500' : 'bg-green-500'}`} />
-                    <span className="text-[10px] font-bold font-mono text-neutral-400">{t.id}</span>
-                    <span className="text-xs text-neutral-700 font-semibold">{t.subject}</span>
-                  </div>
-                  <span className={`text-[8px] font-extrabold uppercase px-2 py-0.5 rounded-lg border ${
-                    isOpen ? 'text-red-500 bg-red-50 border-red-100' : isPending ? 'text-amber-500 bg-amber-50 border-amber-100' : 'text-green-500 bg-green-50 border-green-100'
-                  }`}>{t.status}</span>
-                </div>
-              );
-            })}
+            <div className={`text-xs font-bold italic p-3 border border-l-4 rounded-xl ${
+              isLagging
+                ? 'text-red-700 bg-red-50/50 border-red-200 border-l-red-500'
+                : 'text-emerald-700 bg-emerald-50/50 border-emerald-200 border-l-emerald-500'
+            }`}>
+              &quot;{ceo.mandate}&quot;
+            </div>
+            <p className="text-xs text-neutral-500 leading-relaxed font-medium">
+              {ceo.summary} Based on daily target computations, the Strategy Agent calculates the milestone velocity to ensure goal realization within target timeframes.
+            </p>
           </div>
         </div>
       </div>

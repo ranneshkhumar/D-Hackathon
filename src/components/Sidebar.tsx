@@ -46,11 +46,9 @@ export default function Sidebar({
 
   // Aegis Navigation Items
   const navItems = [
-    { id: 'dashboard', icon: <LayoutDashboard size={14} />, label: 'Executive Dashboard', phase: 'Dominate' },
-    { id: 'discovery', icon: <Rocket size={14} />, label: 'Discovery & Onboarding', phase: 'Discover' },
-    { id: 'boardroom', icon: <Brain size={14} />, label: 'Agent Boardroom', phase: 'Design & Deliver' },
-    { id: 'architecture', icon: <Network size={14} />, label: 'Architecture & Flows', phase: 'System' },
-    { id: 'chat', icon: <MessageSquare size={14} />, label: 'AI Copilot Chat', phase: 'Chat' },
+    { id: 'discovery', icon: <Rocket size={14} />, label: '🚀 Onboarding & Interview', phase: 'Discover' },
+    { id: 'boardroom', icon: <Brain size={14} />, label: '🧠 Agent Boardroom (Live Meeting)', phase: 'Live' },
+    { id: 'dashboard', icon: <LayoutDashboard size={14} />, label: '🏢 Executive Goal Tracker', phase: 'Tracker' },
   ];
 
   // Close menus on click outside
