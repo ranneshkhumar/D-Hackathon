@@ -77,7 +77,9 @@ export class DiscoveryController {
         doc_text,
         marketing_budget,
         gross_margin,
-        expenses
+        expenses,
+        website,
+        instagram
       } = req.body;
 
       if (!organizationId) {
@@ -101,13 +103,17 @@ export class DiscoveryController {
         update: {
           name: company_name || 'Aegis Client Workspace',
           industry: industry || 'Retail',
-          employeeCount: parsedEmployees
+          employeeCount: parsedEmployees,
+          website: website || null,
+          instagram: instagram || null
         },
         create: {
           id: organizationId,
           name: company_name || 'Aegis Client Workspace',
           industry: industry || 'Retail',
           employeeCount: parsedEmployees,
+          website: website || null,
+          instagram: instagram || null,
           kpiMetrics: {
             create: {}
           }

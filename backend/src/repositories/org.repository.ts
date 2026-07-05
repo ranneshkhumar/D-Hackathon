@@ -15,12 +15,13 @@ export class OrgRepository {
   /**
    * Creates a new organization workspace
    */
-  static async create(name: string, industry: string, website?: string): Promise<Organization> {
+  static async create(name: string, industry: string, website?: string, instagram?: string): Promise<Organization> {
     return prisma.organization.create({
       data: { 
         name, 
         industry, 
         website,
+        instagram,
         kpiMetrics: {
           create: {} // Create empty KPI metrics record for this organization
         }

@@ -56,6 +56,8 @@ function OnboardingContent() {
     headquarters: null as string | null,
     employees: null as number | null,
     branches: null as number | null,
+    website: '' as string,
+    instagram: '' as string,
     
     monthlyRevenue: null as number | null,
     monthlyExpenses: null as number | null,
@@ -230,6 +232,8 @@ function OnboardingContent() {
         headquarters: null,
         employees: null,
         branches: null,
+        website: '',
+        instagram: '',
       }));
     } else if (step === 2) {
       setForm(f => ({
@@ -355,7 +359,9 @@ function OnboardingContent() {
         doc_text: combinedDescText,
         marketing_budget: finalPayload.marketingBudget,
         gross_margin: 30,
-        expenses: finalPayload.monthlyExpenses ? finalPayload.monthlyExpenses * 12 : null
+        expenses: finalPayload.monthlyExpenses ? finalPayload.monthlyExpenses * 12 : null,
+        website: finalPayload.website || null,
+        instagram: finalPayload.instagram || null
       });
     } catch (e) {
       console.warn('[Onboarding] Failed to ingest onboarding payload to backend database:', e);
@@ -573,6 +579,30 @@ function OnboardingContent() {
                         className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3.5 py-2.5 text-xs text-neutral-800 outline-none focus:bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all"
                         value={form.employees || ''}
                         onChange={e => updateField('employees', e.target.value ? parseInt(e.target.value) : null)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-neutral-600">Website URL (Optional)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. https://mybusiness.com"
+                        className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3.5 py-2.5 text-xs text-neutral-800 outline-none focus:bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all"
+                        value={form.website}
+                        onChange={e => updateField('website', e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-neutral-600">Instagram Profile Link (Optional)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. https://instagram.com/mybusiness"
+                        className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3.5 py-2.5 text-xs text-neutral-800 outline-none focus:bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all"
+                        value={form.instagram}
+                        onChange={e => updateField('instagram', e.target.value)}
                       />
                     </div>
                   </div>
