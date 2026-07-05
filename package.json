@@ -1,20 +1,12 @@
 {
   "name": "ai-business-growth-os-monorepo",
   "version": "1.0.0",
-  "description": "Monorepo workspace orchestrator for Aegis Growth OS",
   "scripts": {
-<<<<<<< HEAD
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-=======
     "install:all": "npm install --prefix frontend && npm install --prefix backend",
     "dev:frontend": "npm run dev --prefix frontend",
     "dev:backend": "npm run dev --prefix backend",
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "prisma:generate": "npm run prisma:generate --prefix backend"
->>>>>>> Rann
   },
   "dependencies": {
     "concurrently": "^8.2.2",
