@@ -142,7 +142,7 @@ export default function ChatWorkspace({ activeOrg, initialMessages = [] }: ChatW
         </div>
         <div className="flex items-center gap-3">
           <span className="text-[10px] text-neutral-500 bg-neutral-50 border border-neutral-200 px-2.5 py-0.5 rounded-full font-mono uppercase">
-            Model: Gemini-3.5-Flash
+            Model: Ollama (Gemma 4)
           </span>
         </div>
       </header>

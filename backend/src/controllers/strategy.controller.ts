@@ -45,6 +45,7 @@ export class StrategyController {
       const result = await AgentExecutionService.executePlan(organizationId, targetSessionId, plan);
 
       return res.status(200).json({
+        success: true,
         message: 'Growth strategy generated successfully',
         findings: result.findings,
         strategy: result.strategy,

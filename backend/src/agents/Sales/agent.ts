@@ -62,6 +62,6 @@ Profile inputs: ${JSON.stringify(context.profile)}
       }
     };
 
-    return runGeminiAgent('Sales', systemInstruction, prompt, fallback);
+    return runGeminiAgent('Sales', systemInstruction, prompt, fallback, context);
   }
 };

@@ -30,6 +30,20 @@ function WorkspaceContent() {
   const { runOrchestrator, copilotOpen, setCopilotOpen, copilotMessages, runCopilotPrompt, isRunning } = useAegis();
   const [copilotInput, setCopilotInput] = useState('');
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const [gimmickStep, setGimmickStep] = useState(0);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isRunning) {
+      setGimmickStep(0);
+      interval = setInterval(() => {
+        setGimmickStep((prev) => prev + 1);
+      }, 2500);
+    } else {
+      setGimmickStep(0);
+    }
+    return () => clearInterval(interval);
+  }, [isRunning]);
 
   // Sync state from localStorage on client-side mount
   const refreshState = () => {
@@ -203,14 +217,16 @@ function WorkspaceContent() {
         {renderActiveView()}
 
         {/* Floating Copilot Activator Badge (aligned to right bottom) */}
+        {/* Floating Copilot Activator Badge (aligned to right bottom) */}
         {!copilotOpen && (
           <button
             onClick={() => setCopilotOpen(true)}
-            className="absolute bottom-6 right-6 flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-xs font-bold uppercase tracking-wider px-4 py-3 rounded-full shadow-lg shadow-orange-500/20 transition-all transform active:scale-95 cursor-pointer z-40"
+            className="absolute bottom-6 right-6 flex items-center justify-center bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-full shadow-lg shadow-orange-500/20 transition-all transform active:scale-95 hover:scale-110 cursor-pointer z-40 w-14 h-14"
+            title="AI Copilot Chat"
           >
-            <Sparkles size={14} className="animate-pulse" />
-            <span>Master Executive Copilot</span>
-            <span className="w-2 h-2 rounded-full bg-green-400 animate-ping" />
+            <Sparkles size={22} className="animate-pulse" />
+            <span className="absolute top-1.5 right-1.5 w-3 h-3 rounded-full bg-green-400 border-2 border-white animate-ping" />
+            <span className="absolute top-1.5 right-1.5 w-3 h-3 rounded-full bg-green-400 border-2 border-white" />
           </button>
         )}
       </div>
@@ -243,8 +259,8 @@ function WorkspaceContent() {
                     <Sparkles size={14} className="text-orange-500" />
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-neutral-800">Master Copilot</h3>
-                    <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest leading-none mt-1">MAIN EXECUTIVE BRIDGE</p>
+                    <h3 className="text-xs font-bold text-neutral-800">AI Copilot</h3>
+                    <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest leading-none mt-1">AI STRATEGIC ASSISTANT</p>
                   </div>
                 </div>
                 <button
@@ -280,15 +296,44 @@ function WorkspaceContent() {
                         )}
                       </div>
                       <span className="text-[9px] text-neutral-300 font-mono mt-1 px-1">
-                        {isUser ? 'User' : 'Master Copilot'} · {msg.timestamp}
+                        {isUser ? 'User' : 'AI Copilot'} · {msg.timestamp}
                       </span>
                     </div>
                   );
                 })}
                 {isRunning && (
-                  <div className="flex gap-2 items-center bg-white border border-neutral-200/60 p-3 rounded-2xl rounded-tl-none shadow-sm w-fit">
-                    <Loader2 size={12} className="animate-spin text-orange-500" />
-                    <span className="text-[10px] text-neutral-400 font-medium">Orchestrating agent units...</span>
+                  <div className="bg-white border border-neutral-200/80 rounded-2xl p-4 shadow-sm w-full space-y-3 relative overflow-hidden animate-fade-in rounded-tl-none">
+                    {/* Glowing progress line */}
+                    <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 via-cyan-500 via-green-500 to-orange-500 animate-pulse" />
+                    
+                    <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
+                      <div className="flex items-center gap-2">
+                        <Loader2 size={12} className="animate-spin text-orange-500" />
+                        <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">Boardroom Debates Active</span>
+                      </div>
+                      <span className="text-[8px] font-mono text-neutral-400 bg-neutral-50 px-2 py-0.5 rounded border border-neutral-100 uppercase font-semibold">
+                        Step {Math.min(gimmickStep + 1, 6)} of 6
+                      </span>
+                    </div>
+
+                    <div className="space-y-2.5 max-h-[180px] overflow-y-auto custom-scrollbar pr-1">
+                      {[
+                        { agent: 'CEO Agent', icon: '👔', color: '#3b82f6', text: 'Initiating advisory sweep for this request. Strategy unit, analyze current baseline metrics.' },
+                        { agent: 'Strategy Agent', icon: '🧭', color: '#8b5cf6', text: 'Baseline loaded. Reviewing product-market positioning and competitive moats. Marketing, how does this impact our customer acquisition channels?' },
+                        { agent: 'Marketing Agent', icon: '📣', color: '#06b6d4', text: 'Auditing campaign spend. Proposing optimization to CPC and shifting weights to B2B outbound loops. Sales, align discovery scripts.' },
+                        { agent: 'Sales Agent', icon: '💼', color: '#10b981', text: 'Outbound parameters received. Constructing automated sequence. Finance, model cash flow readiness.' },
+                        { agent: 'Finance Agent', icon: '🪙', color: '#f59e0b', text: 'Running projection sweeps. CAC payback remains below 9 months. Risk filters are green. Summarizing mandate for CEO.' },
+                        { agent: 'CEO Agent', icon: '👔', color: '#3b82f6', text: 'Perfect alignment. Consolidating boardroom blueprint for executive review...' }
+                      ].slice(0, gimmickStep + 1).map((m, idx) => (
+                        <div key={idx} className="flex gap-2 items-start text-[11px] leading-relaxed animate-fade-in">
+                          <span className="text-sm shrink-0 mt-0.5">{m.icon}</span>
+                          <div>
+                            <span className="font-semibold" style={{ color: m.color }}>{m.agent}: </span>
+                            <span className="text-neutral-600 italic">"{m.text}"</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
                 <div ref={chatEndRef} />
@@ -300,7 +345,7 @@ function WorkspaceContent() {
                   <input
                     type="text"
                     disabled={isRunning}
-                    placeholder={isRunning ? "Orchestrating agents..." : "Ask Master Copilot (e.g. 'Revenue dipped 10%...')..."}
+                    placeholder={isRunning ? "Generating reply..." : "Ask AI Copilot (e.g. 'Need marketing ideas...')..."}
                     className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-3.5 pr-10 py-2.5 text-xs text-neutral-800 outline-none focus:bg-white focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all disabled:opacity-60"
                     value={copilotInput}
                     onChange={e => setCopilotInput(e.target.value)}

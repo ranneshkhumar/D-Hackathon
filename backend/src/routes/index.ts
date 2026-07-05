@@ -5,6 +5,7 @@ import { discoveryRouter } from './discovery.routes';
 import { strategyRouter } from './strategy.routes';
 import { chatRouter } from './chat.routes';
 import { dashboardRouter } from './dashboard.routes';
+import { healthRouter } from './health.routes';
 
 const router = Router();
 
@@ -15,5 +16,6 @@ router.use('/discovery', discoveryRouter);
 router.use('/strategy', strategyRouter);
 router.use('/chat', chatRouter);
 router.use('/dashboard', dashboardRouter);
+router.use('/system/health', healthRouter);
 
 export const apiRouter = router;

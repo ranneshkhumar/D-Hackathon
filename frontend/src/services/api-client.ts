@@ -286,6 +286,36 @@ class ApiClientClass {
     }
     return null;
   }
+
+  /**
+   * Sends a user chat message to the backend
+   */
+  async sendChatMessage(orgId: string, message: string, sessionId?: string): Promise<any | null> {
+    const authenticated = await this.authenticate();
+    if (!authenticated || !this.token) return null;
+
+    try {
+      const res = await fetch(`${BACKEND_BASE_URL}/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.token}`
+        },
+        body: JSON.stringify({
+          organizationId: orgId,
+          sessionId: sessionId,
+          message: message
+        })
+      });
+
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      console.warn('[ApiClient] Failed to send chat message:', e);
+    }
+    return null;
+  }
 }
 
 export const ApiClient = new ApiClientClass();

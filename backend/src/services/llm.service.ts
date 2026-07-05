@@ -1,5 +1,5 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { config } from '../config';
+import ollama from 'ollama';
 
 export interface ProviderHealth {
   index: number;
@@ -12,204 +12,245 @@ export interface ProviderHealth {
 }
 
 export class LLMService {
-  private static providers: Array<{
-    index: number;
-    apiKey: string;
-    client: GoogleGenerativeAI;
-    health: ProviderHealth;
-  }> = (() => {
-    if (!config.GEMINI_API_KEY) return [];
-    const keys = config.GEMINI_API_KEY.split(',').map(k => k.trim()).filter(Boolean);
-    console.log(`[LLMService] Initializing health manager for ${keys.length} API key client(s).`);
-    return keys.map((key, index) => {
-      const masked = key.length > 12 
-        ? `${key.substring(0, 8)}...${key.substring(key.length - 6)}`
-        : '***';
-      return {
-        index,
-        apiKey: key,
-        client: new GoogleGenerativeAI(key),
-        health: {
-          index,
-          apiKeyMasked: masked,
-          status: 'ACTIVE',
-          lastSuccess: null,
-          retryAfter: null,
-          failureCount: 0,
-          lastError: null
-        }
-      };
-    });
-  })();
+  private static openRouterProvider: ProviderHealth = {
+    index: 0,
+    apiKeyMasked: config.OPENROUTER_API_KEY
+      ? (config.OPENROUTER_API_KEY.length > 12
+          ? `${config.OPENROUTER_API_KEY.slice(0, 8)}...${config.OPENROUTER_API_KEY.slice(-4)}`
+          : 'CONFIGURED')
+      : 'MISSING_KEY',
+    status: 'ACTIVE',
+    lastSuccess: null,
+    retryAfter: null,
+    failureCount: 0,
+    lastError: null
+  };
 
-  private static clientIndex = 0;
+  private static ollamaProvider: ProviderHealth = {
+    index: 1,
+    apiKeyMasked: 'OLLAMA_LOCAL',
+    status: 'ACTIVE',
+    lastSuccess: null,
+    retryAfter: null,
+    failureCount: 0,
+    lastError: null
+  };
 
   /**
    * Exposes detailed health indicators for all configured providers.
    */
   static getProvidersHealth(): ProviderHealth[] {
-    return this.providers.map(p => ({ ...p.health }));
-  }
-
-  /**
-   * Selection algorithm that filters for active providers and rotates indices.
-   */
-  private static getClient(): { client: GoogleGenerativeAI; index: number } | null {
-    const total = this.providers.length;
-    if (total === 0) return null;
-
-    const now = new Date();
-
-    // Reset rate-limited or exhausted providers if the cooling timer has elapsed
-    for (const p of this.providers) {
-      if ((p.health.status === 'RATE_LIMITED' || p.health.status === 'EXHAUSTED') && p.health.retryAfter && now >= p.health.retryAfter) {
-        console.log(`[LLMService] Cooling window elapsed for provider index ${p.index}. Resetting to ACTIVE.`);
-        p.health.status = 'ACTIVE';
-        p.health.retryAfter = null;
-      }
-    }
-
-    // Find the next available ACTIVE provider
-    for (let i = 0; i < total; i++) {
-      const idx = (this.clientIndex + i) % total;
-      const provider = this.providers[idx];
-
-      if (provider.health.status === 'ACTIVE') {
-        this.clientIndex = (idx + 1) % total;
-        return { client: provider.client, index: idx };
-      }
-    }
-
-    console.warn('[LLMService] No active LLM providers are available. Redirecting to Sandbox fallback mode.');
-    return null;
+    // Dynamically refresh masked key in case it was updated dynamically or recently loaded
+    this.openRouterProvider.apiKeyMasked = config.OPENROUTER_API_KEY
+      ? (config.OPENROUTER_API_KEY.length > 12
+          ? `${config.OPENROUTER_API_KEY.slice(0, 8)}...${config.OPENROUTER_API_KEY.slice(-4)}`
+          : 'CONFIGURED')
+      : 'MISSING_KEY';
+    return [
+      { ...this.openRouterProvider },
+      { ...this.ollamaProvider }
+    ];
   }
 
   /**
    * Updates state flags on successful prompt execution.
    */
-  private static handleSuccess(index: number) {
-    const provider = this.providers[index];
-    if (provider) {
-      provider.health.status = 'ACTIVE';
-      provider.health.lastSuccess = new Date();
-      provider.health.lastError = null;
-      provider.health.failureCount = 0;
-    }
+  private static updateSuccess(provider: 'openrouter' | 'ollama') {
+    const p = provider === 'openrouter' ? this.openRouterProvider : this.ollamaProvider;
+    p.status = 'ACTIVE';
+    p.lastSuccess = new Date();
+    p.lastError = null;
+    p.failureCount = 0;
   }
 
   /**
-   * Analyzes error messages to classify invalid keys, rate limits, and day/project exhaustion.
+   * Updates state flags on failure.
    */
-  private static handleFailure(index: number, error: any) {
-    const provider = this.providers[index];
-    if (!provider) return;
+  private static updateFailure(provider: 'openrouter' | 'ollama', error: any) {
+    const p = provider === 'openrouter' ? this.openRouterProvider : this.ollamaProvider;
+    p.failureCount += 1;
+    p.status = 'INVALID';
+    p.lastError = error instanceof Error ? error.message : String(error);
+  }
 
-    provider.health.failureCount += 1;
-    const errorStr = error instanceof Error ? error.message : String(error);
-    provider.health.lastError = errorStr;
+  /**
+   * General text completion service wrapping OpenRouter API or Ollama depending on configuration
+   */
+  static async ask(prompt: string, systemInstruction?: string): Promise<string | null> {
+    const provider = config.LLM_PROVIDER === 'ollama' ? 'ollama' : 'openrouter';
 
-    // 1. Detect invalid API key or authentication/IP block failure
-    const isAuthError = 
-      errorStr.includes('API key not valid') || 
-      errorStr.includes('API key blocked') || 
-      errorStr.includes('API_KEY_INVALID') || 
-      errorStr.includes('unauthorized') || 
-      errorStr.includes('key is invalid') ||
-      error?.status === 400 || 
-      error?.status === 401 || 
-      error?.status === 403;
+    if (provider === 'openrouter') {
+      console.log(`[LLMService] [OpenRouter] ask() routing to Model: ${config.OPENROUTER_MODEL}`);
+      
+      if (!config.OPENROUTER_API_KEY) {
+        const errMsg = 'OPENROUTER_API_KEY is not configured in backend .env';
+        console.warn(`[LLMService] [OpenRouter] ${errMsg}`);
+        this.updateFailure('openrouter', new Error(errMsg));
+        throw new Error(errMsg);
+      }
 
-    if (isAuthError) {
-      provider.health.status = 'INVALID';
-      provider.health.retryAfter = null;
-      console.error(`[LLMService] Provider index ${index} marked as INVALID due to auth error: ${errorStr}`);
-      return;
-    }
+      try {
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.OPENROUTER_API_KEY}`,
+            'HTTP-Referer': 'https://github.com/ranneshkhumar/D-Hackathon',
+            'X-Title': 'Aegis OS'
+          },
+          body: JSON.stringify({
+            model: config.OPENROUTER_MODEL,
+            messages: [
+              ...(systemInstruction ? [{ role: 'system', content: systemInstruction }] : []),
+              { role: 'user', content: prompt }
+            ],
+            max_tokens: config.OPENROUTER_MAX_TOKENS,
+            temperature: config.OPENROUTER_TEMPERATURE
+          })
+        });
 
-    // 2. Detect rate limit (429) conditions
-    const isRateLimit = errorStr.includes('429') || error?.status === 429;
-    if (isRateLimit) {
-      const isDailyExhaustion = 
-        errorStr.includes('quota exceeded') || 
-        errorStr.includes('limit: 0') || 
-        errorStr.includes('exhausted') || 
-        errorStr.includes('daily');
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`OpenRouter API responded with status ${response.status}: ${errorText}`);
+        }
 
-      const now = new Date();
-      if (isDailyExhaustion) {
-        // Daily or project quota exhausted: suspend provider for 24 hours
-        provider.health.status = 'EXHAUSTED';
-        provider.health.retryAfter = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-        console.error(`[LLMService] Provider index ${index} marked as EXHAUSTED. Locked until: ${provider.health.retryAfter.toISOString()}`);
-      } else {
-        // Per-minute rate limit hit: cool down for 60 seconds
-        provider.health.status = 'RATE_LIMITED';
-        provider.health.retryAfter = new Date(now.getTime() + 60 * 1000);
-        console.warn(`[LLMService] Provider index ${index} marked as RATE_LIMITED. Locked until: ${provider.health.retryAfter.toISOString()}`);
+        const data = await response.json() as any;
+        const text = data.choices?.[0]?.message?.content || null;
+        
+        this.updateSuccess('openrouter');
+        return text;
+      } catch (error) {
+        console.error('[LLMService] [OpenRouter] ask() failed:', error);
+        this.updateFailure('openrouter', error);
+        throw error;
+      }
+    } else {
+      console.log(`[LLMService] [Ollama] ask() routing to Model: ${config.OLLAMA_MODEL}`);
+      try {
+        const ollamaPromise = ollama.chat({
+          model: config.OLLAMA_MODEL,
+          messages: [
+            ...(systemInstruction ? [{ role: 'system', content: systemInstruction }] : []),
+            { role: 'user', content: prompt }
+          ]
+        });
+
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error(`Ollama request timed out after ${config.OLLAMA_TIMEOUT}ms`)), config.OLLAMA_TIMEOUT)
+        );
+
+        const response = await Promise.race([ollamaPromise, timeoutPromise]);
+        const text = response.message.content;
+        this.updateSuccess('ollama');
+        return text;
+      } catch (error) {
+        console.error('[LLMService] [Ollama] ask() failed:', error);
+        this.updateFailure('ollama', error);
+        throw error;
       }
     }
   }
 
   /**
-   * General text completion service wrapping Gemini with provider health routing
+   * JSON generation wrapper for structured agent findings using OpenRouter or Ollama
    */
-  static async ask(prompt: string, systemInstruction?: string): Promise<string | null> {
-    const providerInfo = this.getClient();
-    if (!providerInfo) {
-      return null;
-    }
+  static async askJson<T>(prompt: string, systemInstruction?: string): Promise<T | null> {
+    const provider = config.LLM_PROVIDER === 'ollama' ? 'ollama' : 'openrouter';
 
-    const { client, index } = providerInfo;
-    console.log(`[LLMService] ask() routing to client index: ${index}`);
+    if (provider === 'openrouter') {
+      console.log(`[LLMService] [OpenRouter] askJson() routing to Model: ${config.OPENROUTER_MODEL}`);
 
-    try {
-      const model = client.getGenerativeModel({
-        model: 'gemini-2.0-flash',
-        systemInstruction
-      });
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-      
-      this.handleSuccess(index);
-      return text;
-    } catch (error) {
-      this.handleFailure(index, error);
-      // Recursively fall back to the next eligible client
-      return this.ask(prompt, systemInstruction);
+      if (!config.OPENROUTER_API_KEY) {
+        const errMsg = 'OPENROUTER_API_KEY is not configured in backend .env';
+        console.warn(`[LLMService] [OpenRouter] ${errMsg}`);
+        this.updateFailure('openrouter', new Error(errMsg));
+        throw new Error(errMsg);
+      }
+
+      try {
+        // Append a JSON instruction to the system instruction to be safe
+        const jsonSystemInstruction = `${systemInstruction || ''}\nYou must return a valid, parsable JSON object matching the requested schema. Do not output conversational text outside the JSON.`;
+        
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.OPENROUTER_API_KEY}`,
+            'HTTP-Referer': 'https://github.com/ranneshkhumar/D-Hackathon',
+            'X-Title': 'Aegis OS'
+          },
+          body: JSON.stringify({
+            model: config.OPENROUTER_MODEL,
+            messages: [
+              { role: 'system', content: jsonSystemInstruction },
+              { role: 'user', content: prompt }
+            ],
+            response_format: { type: 'json_object' },
+            max_tokens: config.OPENROUTER_MAX_TOKENS,
+            temperature: config.OPENROUTER_TEMPERATURE
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`OpenRouter API responded with status ${response.status}: ${errorText}`);
+        }
+
+        const data = await response.json() as any;
+        const text = data.choices?.[0]?.message?.content;
+
+        if (!text) {
+          throw new Error('OpenRouter API returned an empty completion content.');
+        }
+
+        const parsed = this.cleanAndParseJson<T>(text);
+        this.updateSuccess('openrouter');
+        return parsed;
+      } catch (error) {
+        console.error('[LLMService] [OpenRouter] askJson() failed:', error);
+        this.updateFailure('openrouter', error);
+        throw error;
+      }
+    } else {
+      console.log(`[LLMService] [Ollama] askJson() routing to Model: ${config.OLLAMA_MODEL}`);
+      try {
+        const ollamaPromise = ollama.chat({
+          model: config.OLLAMA_MODEL,
+          messages: [
+            ...(systemInstruction ? [{ role: 'system', content: systemInstruction }] : []),
+            { role: 'user', content: prompt }
+          ],
+          format: 'json'
+        });
+
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error(`Ollama request timed out after ${config.OLLAMA_TIMEOUT}ms`)), config.OLLAMA_TIMEOUT)
+        );
+
+        const response = await Promise.race([ollamaPromise, timeoutPromise]);
+        const text = response.message.content;
+        const parsed = this.cleanAndParseJson<T>(text);
+        this.updateSuccess('ollama');
+        return parsed;
+      } catch (error) {
+        console.error('[LLMService] [Ollama] askJson() failed:', error);
+        this.updateFailure('ollama', error);
+        throw error;
+      }
     }
   }
 
   /**
-   * JSON generation wrapper for structured agent findings with provider health routing
+   * Helper utility to scrub markdown backticks and parse the JSON string safely.
    */
-  static async askJson<T>(prompt: string, systemInstruction?: string): Promise<T | null> {
-    const providerInfo = this.getClient();
-    if (!providerInfo) {
-      return null;
+  private static cleanAndParseJson<T>(text: string): T {
+    let cleanText = text.trim();
+    if (cleanText.startsWith('```')) {
+      const match = cleanText.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+      if (match) {
+        cleanText = match[1].trim();
+      }
     }
-
-    const { client, index } = providerInfo;
-    console.log(`[LLMService] askJson() routing to client index: ${index}`);
-
-    try {
-      const model = client.getGenerativeModel({
-        model: 'gemini-2.0-flash',
-        systemInstruction,
-        generationConfig: {
-          responseMimeType: 'application/json'
-        }
-      });
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-      
-      this.handleSuccess(index);
-      return JSON.parse(text) as T;
-    } catch (error) {
-      this.handleFailure(index, error);
-      // Recursively fall back to the next eligible client
-      return this.askJson<T>(prompt, systemInstruction);
-    }
+    return JSON.parse(cleanText) as T;
   }
 }

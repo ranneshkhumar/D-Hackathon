@@ -4,6 +4,8 @@ import React, { createContext, useContext, useReducer, useEffect, ReactNode, use
 import { runAgentOrchestrator, DEFAULT_BUSINESS, BusinessData, AgentOutputs, LogEntry } from '../engine/agents';
 import { OrgManager } from '@/services/org-manager';
 import { ApiClient } from '@/services/api-client';
+import { BusinessOrchestrator } from '@/services/business-orchestrator';
+import { Message } from '@/types';
 
 export interface AegisState {
   businessData: BusinessData | null;
@@ -94,7 +96,7 @@ export function AegisProvider({ children }: { children: ReactNode }) {
         setCopilotMessages([
           {
             role: 'assistant',
-            text: 'Greetings. I am the Master Executive Copilot. Ask me to coordinate any strategic objective down to the CEO, Marketing, Strategy, Sales, and Finance units.',
+            text: 'Greetings. I am your strategic AI Copilot. Ask me any business questions or operational queries.',
             timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
           }
         ]);
@@ -137,7 +139,7 @@ export function AegisProvider({ children }: { children: ReactNode }) {
               setCopilotMessages([
                 {
                   role: 'assistant',
-                  text: 'Welcome back. I have successfully reloaded your strategic workspace context directly from Neon PostgreSQL.',
+                  text: 'Welcome back. I am your AI Copilot. Ready to assist with your operational and business growth queries.',
                   timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
                 }
               ]);
@@ -163,7 +165,7 @@ export function AegisProvider({ children }: { children: ReactNode }) {
           setCopilotMessages([
             {
               role: 'assistant',
-              text: 'Greetings. I am the Master Executive Copilot. Ask me to coordinate any strategic objective down to the CEO, Marketing, Strategy, Sales, and Finance units.',
+              text: 'Greetings. I am your strategic AI Copilot. Ask me any business questions or operational queries.',
               timestamp: new Date().toLocaleTimeString('en-US', { hour12: false }),
             }
           ]);
@@ -213,36 +215,59 @@ export function AegisProvider({ children }: { children: ReactNode }) {
     const active = OrgManager.getActiveOrganization();
     if (active) {
       try {
-        const backendRes = await ApiClient.executeAgentStrategy(active.id, prompt);
-        if (backendRes && backendRes.success) {
-          const outputs = formatBackendOutputs(backendRes);
-          const log = buildLogsFromBackend(backendRes);
-          dispatch({ type: 'RUN_COMPLETE', businessData: state.businessData!, agentOutputs: outputs, agentLog: log });
+        // Map current copilot messages history for context
+        const mappedMessages: Message[] = copilotMessages.map((m, idx) => ({
+          id: `msg_copilot_${idx}`,
+          role: m.role,
+          content: m.text,
+          timestamp: new Date().toISOString()
+        }));
 
-          const assistantMsg: CopilotMessage = {
-            role: 'assistant',
-            text: `### 🤖 Live Copilot Run Complete\n\nI have successfully executed the strategy query on the PostgreSQL database and Google Gemini API for: **"${prompt}"**.\n\nAll metrics, pipeline conversion weights, and priorities have been updated dynamically across the command center view.`,
-            timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
-          };
-          setCopilotMessages(prev => [...prev, assistantMsg]);
-          return;
-        }
+        // Promise to wait exactly 15 seconds
+        const delayPromise = new Promise((resolve) => setTimeout(resolve, 15000));
+
+        // Call BusinessOrchestrator conversational AI
+        const apiPromise = BusinessOrchestrator.ask({
+          organization: active,
+          messages: [
+            ...mappedMessages,
+            {
+              id: 'msg_copilot_new_user',
+              role: 'user',
+              content: prompt,
+              timestamp: new Date().toISOString()
+            }
+          ],
+          prompt: prompt
+        });
+
+        // Wait for both the API response and the 15-second gimmick timer to resolve
+        const [responseText] = await Promise.all([apiPromise, delayPromise]);
+
+        const assistantMsg: CopilotMessage = {
+          role: 'assistant',
+          text: responseText,
+          timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
+        };
+        
+        setCopilotMessages(prev => [...prev, assistantMsg]);
       } catch (e) {
         console.warn('[AegisContext] Backend copilot call failed, using fallback:', e);
+        const assistantMsg: CopilotMessage = {
+          role: 'assistant',
+          text: `### ⚠️ Connection Error\n\nFailed to reach the AI Copilot. Please verify that your backend service is running correctly.`,
+          timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
+        };
+        setCopilotMessages(prev => [...prev, assistantMsg]);
+      } finally {
+        dispatch({ 
+          type: 'RUN_COMPLETE', 
+          businessData: state.businessData!, 
+          agentOutputs: state.agentOutputs || { ceo: {}, strategy: {}, marketing: {}, sales: {}, finance: {} } as any, 
+          agentLog: state.agentLog || [] 
+        });
       }
     }
-
-    setTimeout(() => {
-      const { outputs, log } = runAgentOrchestrator(state.businessData!, prompt);
-      dispatch({ type: 'RUN_COMPLETE', businessData: state.businessData!, agentOutputs: outputs, agentLog: log });
-
-      const assistantMsg: CopilotMessage = {
-        role: 'assistant',
-        text: `### 🤖 Sandbox Copilot Plan Executed\n\nI have parsed your request: **"${prompt}"** and orchestrated the local simulated agents.\n\nAll metrics and priorities have been updated locally.`,
-        timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
-      };
-      setCopilotMessages(prev => [...prev, assistantMsg]);
-    }, 1200);
   };
 
   return (
@@ -305,7 +330,19 @@ function formatBackendOutputs(backendRes: any): AgentOutputs {
         email_subject: 'Better energy for {{company_name}} teams',
         email_body: 'Hi {{first_name}},\n\nI noticed you manage operations at {{company_name}}...',
         channels: Object.values(fMarketing.channelBreakdown || { p: 'Instagram Social' }) as string[],
-        hook: fMarketing.landingPageHooks?.[1] || 'Premium wellness energy boosters for office teams.'
+        hook: fMarketing.landingPageHooks?.[1] || 'Premium wellness energy boosters for office teams.',
+        instagram_post: fMarketing.instagramPostCopy || {
+          visualDirections: 'Premium product mockup placed beside a laptop with soft morning desk light.',
+          caption: 'Ready to upgrade your team breaks? ☕️ Natural, sustained focus without the coffee jitters or sugar crashes. Elevate your workday focus with Aegis-approved organic boosters.',
+          hashtags: ['#workdayfocus', '#productivityhacks', '#officehealth']
+        },
+        influencer_script: fMarketing.influencerMarketing || {
+          targetingProfile: 'Tech-hub micro-influencers and productivity coach accounts (aligns with startup-level budgets).',
+          hook: 'I stopped drinking synthetic energy drinks that crash my focus after lunch...',
+          scriptBody: 'As a startup founder, I used to rely on double espressos and energy cans just to get through slide decks. Then I discovered natural plant infusions. No jitters, no crash, just steady, clean focus. You feel awake, but calm.',
+          cta: 'Check out the link in my bio to get 15% off the Workplace Starter Kit today!',
+          visualNotes: 'Influencer starts in a chaotic workspace, holds head in hands. Cuts to clean prep shot, taking a sip with a relaxed smile, then showing a clean keyboard workspace.'
+        }
       },
       content_calendar: [
         { week: 'Week 1', content: 'Launch wellness video hook', channel: 'Instagram' },

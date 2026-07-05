@@ -33,7 +33,19 @@ You must return a JSON object matching this structure EXACTLY:
       "Secondary": "Outbound Email & Referrals",
       "Tertiary": "Offline corporate popups"
     },
-    "marketingRoiProjection": "Estimated 2.8x ROI over the next quarter by executing target demographic exclusions."
+    "marketingRoiProjection": "Estimated 2.8x ROI over the next quarter by executing target demographic exclusions.",
+    "instagramPostCopy": {
+      "visualDirections": "Visual details/guidelines for the image/carousel based on the product",
+      "caption": "Engaging copy for the post caption tailored to the business goal",
+      "hashtags": ["#marketing", "#wellness"]
+    },
+    "influencerMarketing": {
+      "targetingProfile": "Creators category/demographics matching product and budget size (e.g. corporate micro-influencers)",
+      "hook": "0-3s hook sentence",
+      "scriptBody": "Video outline or script body based on the primary product benefits",
+      "cta": "Call to action",
+      "visualNotes": "Visual directions for the creator"
+    }
   }
 }`;
 
@@ -67,10 +79,22 @@ Profile inputs: ${JSON.stringify(context.profile)}
           Secondary: 'Shopify Website Search',
           Tertiary: 'WhatsApp Marketing'
         },
-        marketingRoiProjection: '3.1x target ROI on new email flows.'
+        marketingRoiProjection: '3.1x target ROI on new email flows.',
+        instagramPostCopy: {
+          visualDirections: 'Premium product mockup placed beside a laptop with soft morning desk light.',
+          caption: 'Ready to upgrade your team breaks? ☕️ Natural, sustained focus without the coffee jitters or sugar crashes. Elevate your workday focus with Aegis-approved organic boosters.',
+          hashtags: ['#workdayfocus', '#productivityhacks', '#officehealth']
+        },
+        influencerMarketing: {
+          targetingProfile: 'Tech-hub micro-influencers and productivity coach accounts (aligns with startup-level budgets).',
+          hook: 'I stopped drinking synthetic energy drinks that crash my focus after lunch...',
+          scriptBody: 'As a startup founder, I used to rely on double espressos and energy cans just to get through slide decks. Then I discovered natural plant infusions. No jitters, no crash, just steady, clean focus. You feel awake, but calm.',
+          cta: 'Check out the link in my bio to get 15% off the Workplace Starter Kit today!',
+          visualNotes: 'Influencer starts in a chaotic workspace, holds head in hands. Cuts to clean prep shot, taking a sip with a relaxed smile, then showing a clean keyboard workspace.'
+        }
       }
     };
 
-    return runGeminiAgent('Marketing', systemInstruction, prompt, fallback);
+    return runGeminiAgent('Marketing', systemInstruction, prompt, fallback, context);
   }
 };

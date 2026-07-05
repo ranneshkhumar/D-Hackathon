@@ -187,6 +187,73 @@ export default function BoardroomView() {
           </div>
         </div>
 
+        {/* Instagram Post & Influencer Script Creative Box */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Instagram Social Post Copy mockup */}
+          <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
+            <div className="flex items-center gap-2 pb-2 border-b border-neutral-100">
+              <span className="text-lg">📸</span>
+              <h4 className="text-xs font-bold text-neutral-700 uppercase tracking-wider">Instagram Social Creative Copy</h4>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="text-[9px] font-bold text-neutral-400 uppercase">Visual Layout Directions</div>
+              <div className="text-xs text-neutral-600 bg-neutral-50 border border-neutral-100 rounded-xl p-3 italic">
+                {(c as any).instagram_post?.visualDirections}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="text-[9px] font-bold text-neutral-400 uppercase">Post Caption Copy</div>
+              <p className="text-xs leading-relaxed text-neutral-600 bg-neutral-50/50 border border-neutral-100 rounded-xl p-3.5 whitespace-pre-wrap">
+                {(c as any).instagram_post?.caption}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5">
+              {((c as any).instagram_post?.hashtags || []).map((tag: string, idx: number) => (
+                <span key={idx} className="text-[10px] font-bold text-cyan-600 font-mono">{tag}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Influencer Marketing Script Prompter */}
+          <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-4">
+            <div className="flex items-center gap-2 pb-2 border-b border-neutral-100">
+              <span className="text-lg">🎥</span>
+              <h4 className="text-xs font-bold text-neutral-700 uppercase tracking-wider">Influencer Marketing Video Script</h4>
+            </div>
+
+            <div className="space-y-1">
+              <div className="text-[9px] font-bold text-neutral-400 uppercase">Target Creator Profile (Niche & Budget Balanced)</div>
+              <div className="text-xs font-bold text-cyan-700 bg-cyan-50/50 border border-cyan-100 rounded-xl p-2.5">
+                {(c as any).influencer_script?.targetingProfile}
+              </div>
+            </div>
+
+            <div className="space-y-2.5">
+              <div className="border border-neutral-100 rounded-xl overflow-hidden divide-y divide-neutral-100 text-xs">
+                <div className="p-3 bg-neutral-50/50 flex gap-2">
+                  <span className="font-bold text-neutral-400 w-[60px] shrink-0 uppercase text-[9px] pt-0.5">0-3s Hook</span>
+                  <span className="text-neutral-700 font-semibold italic">&quot;{(c as any).influencer_script?.hook}&quot;</span>
+                </div>
+                <div className="p-3 flex gap-2">
+                  <span className="font-bold text-neutral-400 w-[60px] shrink-0 uppercase text-[9px] pt-0.5">Dialogue</span>
+                  <p className="text-neutral-600 leading-relaxed">{(c as any).influencer_script?.scriptBody}</p>
+                </div>
+                <div className="p-3 bg-neutral-50/50 flex gap-2">
+                  <span className="font-bold text-neutral-400 w-[60px] shrink-0 uppercase text-[9px] pt-0.5">CTA Video</span>
+                  <span className="text-cyan-600 font-bold">{(c as any).influencer_script?.cta}</span>
+                </div>
+                <div className="p-3 flex gap-2">
+                  <span className="font-bold text-neutral-400 w-[60px] shrink-0 uppercase text-[9px] pt-0.5">Visuals</span>
+                  <span className="text-neutral-500 font-medium italic">{(c as any).influencer_script?.visualNotes}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Content calendar table */}
         <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-sm space-y-3">
           <h4 className="text-xs font-bold text-neutral-700 tracking-wide uppercase">4-Week Content Calendar</h4>

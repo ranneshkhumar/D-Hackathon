@@ -45,6 +45,18 @@ export interface MarketingOutput {
     email_body: string;
     channels: string[];
     hook: string;
+    instagram_post?: {
+      visualDirections: string;
+      caption: string;
+      hashtags: string[];
+    };
+    influencer_script?: {
+      targetingProfile: string;
+      hook: string;
+      scriptBody: string;
+      cta: string;
+      visualNotes: string;
+    };
   };
   content_calendar: Array<{
     week: string;

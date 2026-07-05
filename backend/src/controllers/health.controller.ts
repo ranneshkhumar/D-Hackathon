@@ -19,15 +19,25 @@ export class HealthController {
         dbStatus = 'UNAVAILABLE';
       }
 
-      // 2. Audit Gemini Providers
-      const geminiHealth = LLMService.getProvidersHealth();
-      const anyLive = geminiHealth.some(p => p.status === 'ACTIVE');
+      // 2. Audit OpenRouter Providers
+      const openRouterHealth = LLMService.getProvidersHealth();
+      const anyLive = openRouterHealth.some(p => p.status === 'ACTIVE');
 
       // 3. Audit Sandbox Engine
       const sandboxStatus = 'ACTIVE'; // Standby sandbox state
 
       // 4. Audit AI Orchestration Service
       const orchestrationStatus = anyLive ? 'ACTIVE' : 'SANDBOX_FALLBACK';
+
+      const providerList = openRouterHealth.map(p => ({
+        providerIndex: p.index,
+        maskedKey: p.apiKeyMasked,
+        status: p.status,
+        lastSuccessfulRequest: p.lastSuccess ? p.lastSuccess.toISOString() : null,
+        retryAfter: p.retryAfter ? p.retryAfter.toISOString() : null,
+        failureCount: p.failureCount,
+        lastError: p.lastError
+      }));
 
       // 5. Build consolidated audit report
       return res.status(dbStatus === 'ACTIVE' ? 200 : 500).json({
@@ -47,17 +57,10 @@ export class HealthController {
           aiOrchestration: {
             name: 'Multi-Agent Advisory Boardroom',
             status: orchestrationStatus,
-            providersCount: geminiHealth.length,
+            providersCount: openRouterHealth.length,
           },
-          geminiProviders: geminiHealth.map(p => ({
-            providerIndex: p.index,
-            maskedKey: p.apiKeyMasked,
-            status: p.status,
-            lastSuccessfulRequest: p.lastSuccess ? p.lastSuccess.toISOString() : null,
-            retryAfter: p.retryAfter ? p.retryAfter.toISOString() : null,
-            failureCount: p.failureCount,
-            lastError: p.lastError
-          }))
+          openRouterProviders: providerList,
+          geminiProviders: providerList // Backward compatibility support
         }
       });
     } catch (error) {

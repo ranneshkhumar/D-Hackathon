@@ -63,6 +63,6 @@ Profile inputs: ${JSON.stringify(context.profile)}
       }
     };
 
-    return runGeminiAgent('CEO', systemInstruction, prompt, fallback);
+    return runGeminiAgent('CEO', systemInstruction, prompt, fallback, context);
   }
 };

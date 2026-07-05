@@ -1,16 +1,26 @@
-import { GeminiService } from './gemini';
+import { ApiClient } from './api-client';
+import { OpenRouterService } from './openrouter';
 import { OrchestratorPayload } from '@/types';
 
 export const BusinessOrchestrator = {
   /**
    * Processes user requests through the Business OS orchestration layer.
-   * Currently, it simply forwards the request to GeminiService, but it is structured
-   * to accept full organization context and message history to support future specialized agents.
+   * Redirects user queries to the OpenRouter backend via backend API,
+   * falling back to client-side demonstration/fallback mode if backend fails.
    */
   async ask({ organization, messages, prompt }: OrchestratorPayload): Promise<string> {
-    // Forward the request to Gemini, passing along context if needed
-    // In the future, this method will query agents/ memory/ and orchestrate multi-agent workflow
-    console.log(`[BusinessOrchestrator] Processing request for workspace: ${organization.name}`);
-    return GeminiService.ask(prompt, messages);
+    console.log(`[BusinessOrchestrator] Routing request for workspace: ${organization.name} through backend API to OpenRouter`);
+    
+    try {
+      const result = await ApiClient.sendChatMessage(organization.id, prompt);
+      if (result && result.response) {
+        return result.response;
+      }
+    } catch (error) {
+      console.warn('[BusinessOrchestrator] Backend chat API failed. Falling back to client-side OpenRouter fallback mode.', error);
+    }
+    
+    // Fallback if backend is unavailable
+    return OpenRouterService.ask(prompt, messages);
   }
 };

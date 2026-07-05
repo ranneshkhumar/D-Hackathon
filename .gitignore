@@ -9,6 +9,7 @@ dist/
 build/
 *.so
 .env
+.env.local
 .venv
 env/
 venv/
