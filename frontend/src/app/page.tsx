@@ -294,6 +294,39 @@ function WorkspaceContent() {
                       >
                         {isUser ? (
                           <p>{msg.text}</p>
+                        ) : msg.agents && msg.agents.length > 0 ? (
+                          <div className="space-y-4 w-full text-neutral-700">
+                            <div className="text-[9px] font-black uppercase text-neutral-400 tracking-wider pb-1 border-b border-neutral-100 flex items-center gap-1.5 mb-2 select-none">
+                              <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                              Boardroom Agent Debate
+                            </div>
+                            <div className="space-y-3">
+                              {msg.agents.map((agentMsg, idx) => (
+                                <div key={idx} className="space-y-2 border-l-2 border-orange-200 pl-3 py-0.5">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-xs shrink-0">{agentMsg.icon}</span>
+                                      <span className="font-bold text-[10.5px] text-neutral-800">{agentMsg.agent}</span>
+                                    </div>
+                                    <span className="text-[7.5px] font-extrabold text-neutral-400 bg-neutral-100 px-1.5 py-0.5 rounded border border-neutral-200/40 uppercase tracking-wider">
+                                      Active
+                                    </span>
+                                  </div>
+                                  
+                                  <div className="bg-neutral-50 rounded-lg p-2 text-[8px] text-neutral-500 space-y-0.5 border border-neutral-200/30 font-mono select-all">
+                                    <div><span className="font-bold text-neutral-400">ROLE:</span> {agentMsg.role}</div>
+                                    <div><span className="font-bold text-neutral-400">RESPONSIBILITY:</span> {agentMsg.responsibility}</div>
+                                    <div><span className="font-bold text-neutral-400">INPUT:</span> {agentMsg.input}</div>
+                                    <div><span className="font-bold text-neutral-400">OUTPUT:</span> {agentMsg.output}</div>
+                                  </div>
+
+                                  <p className="text-[11px] text-neutral-600 leading-relaxed italic whitespace-pre-wrap">
+                                    &quot;{agentMsg.text}&quot;
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         ) : (
                           <div className="markdown-body text-[11.5px]">
                             <ReactMarkdown>{msg.text}</ReactMarkdown>

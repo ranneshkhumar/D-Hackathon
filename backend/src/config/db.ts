@@ -1,15 +1,17 @@
 import { PrismaClient } from '@prisma/client';
 
 const realPrisma = new PrismaClient();
-let dbConnected = false;
+let connectionState: 'pending' | 'connected' | 'failed' = 'pending';
+let connectionError: any = null;
 
-realPrisma.$connect()
+const connectionPromise = realPrisma.$connect()
   .then(() => {
-    dbConnected = true;
+    connectionState = 'connected';
     console.log('[DATABASE] PostgreSQL connected successfully via Prisma Client');
   })
   .catch((err) => {
-    dbConnected = false;
+    connectionState = 'failed';
+    connectionError = err;
     console.error('[DATABASE ERROR] Failed to connect to PostgreSQL. Gracefully switching to In-Memory database fallback.', err.message);
   });
 
@@ -50,7 +52,7 @@ const createMockCollection = (modelName: string) => {
               const relatedItems = memoryDb[targetCollectionName].filter(
                 (item: any) => item.organizationId === record.id || item.organizationId === record.organizationId
               );
-              const isOneToOne = relation === 'businessProfile' || relation === 'kpiMetrics' || relation === 'kpiMetrics';
+              const isOneToOne = relation === 'businessProfile' || relation === 'kpiMetrics';
               copy[relation] = isOneToOne ? (relatedItems[0] || null) : relatedItems;
             } else {
               const isOneToOne = relation === 'businessProfile' || relation === 'kpiMetrics';
@@ -168,16 +170,68 @@ const mockPrisma = new Proxy({}, {
   }
 });
 
+const modelProxyCache = new Map<string, any>();
+
+function getModelProxy(modelName: string) {
+  if (modelProxyCache.has(modelName)) {
+    return modelProxyCache.get(modelName);
+  }
+
+  const modelProxy = new Proxy({}, {
+    get(target, method) {
+      return async (...args: any[]) => {
+        // Automatically await stable connection settling
+        await connectionPromise;
+        
+        const client = connectionState === 'connected' ? realPrisma : mockPrisma;
+        const model = (client as any)[modelName];
+        if (!model) {
+          throw new Error(`Model ${modelName} does not exist on Prisma client`);
+        }
+        const fn = model[method];
+        if (typeof fn !== 'function') {
+          throw new Error(`Method ${String(method)} does not exist on model ${modelName}`);
+        }
+        return fn.apply(model, args);
+      };
+    }
+  });
+
+  modelProxyCache.set(modelName, modelProxy);
+  return modelProxy;
+}
+
 export const prisma = new Proxy(realPrisma, {
   get(target, prop) {
     if (prop === '$connect' || prop === '$disconnect') {
       return realPrisma[prop].bind(realPrisma);
     }
-    if (dbConnected) {
-      const val = realPrisma[prop as keyof typeof realPrisma];
-      return typeof val === 'function' ? (val as Function).bind(realPrisma) : val;
-    } else {
-      return mockPrisma[prop as keyof typeof mockPrisma];
+    
+    if (prop === '$transaction') {
+      return async (arg: any, options?: any) => {
+        await connectionPromise;
+        const client = (connectionState === 'connected' ? realPrisma : mockPrisma) as any;
+        if (typeof arg === 'function') {
+          return client.$transaction(async (tx: any) => arg(tx), options);
+        } else {
+          return client.$transaction(arg, options);
+        }
+      };
     }
+
+    if (prop === '$queryRaw' || prop === '$executeRaw' || prop === '$queryRawUnsafe' || prop === '$executeRawUnsafe') {
+      return async (...args: any[]) => {
+        await connectionPromise;
+        const client = connectionState === 'connected' ? realPrisma : mockPrisma;
+        const fn = (client as any)[prop];
+        if (typeof fn === 'function') {
+          return fn.apply(client, args);
+        }
+        return null;
+      };
+    }
+
+    const modelName = prop as string;
+    return getModelProxy(modelName);
   }
 }) as unknown as PrismaClient;

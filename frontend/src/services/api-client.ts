@@ -290,7 +290,7 @@ class ApiClientClass {
   /**
    * Sends a user chat message to the backend
    */
-  async sendChatMessage(orgId: string, message: string, sessionId?: string): Promise<any | null> {
+  async sendChatMessage(orgId: string, message: string, sessionId?: string, businessData?: any): Promise<any | null> {
     const authenticated = await this.authenticate();
     if (!authenticated || !this.token) return null;
 
@@ -304,7 +304,8 @@ class ApiClientClass {
         body: JSON.stringify({
           organizationId: orgId,
           sessionId: sessionId,
-          message: message
+          message: message,
+          businessData: businessData
         })
       });
 

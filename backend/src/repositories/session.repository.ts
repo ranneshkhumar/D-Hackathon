@@ -26,6 +26,13 @@ export class SessionRepository {
   }
 
   static async addChatMessage(sessionId: string, role: string, content: string): Promise<ChatHistory> {
+    const session = await prisma.conversationSession.findUnique({
+      where: { id: sessionId }
+    });
+    if (!session) {
+      throw new Error(`ConversationSession matching ID '${sessionId}' was not found. Cannot add chat message.`);
+    }
+
     const chat = await prisma.chatHistory.create({
       data: { sessionId, role, content }
     });
@@ -44,6 +51,13 @@ export class SessionRepository {
     confidence: number;
     rawJson: any;
   }): Promise<AgentMemory> {
+    const session = await prisma.conversationSession.findUnique({
+      where: { id: sessionId }
+    });
+    if (!session) {
+      throw new Error(`ConversationSession matching ID '${sessionId}' was not found. Cannot upsert AgentMemory.`);
+    }
+
     const serializedIssues = JSON.stringify(data.issues);
     const serializedRecommendations = JSON.stringify(data.recommendations);
     const serializedRawJson = JSON.stringify(data.rawJson);

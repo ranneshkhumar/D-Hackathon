@@ -11,8 +11,18 @@ export const BusinessOrchestrator = {
   async ask({ organization, messages, prompt }: OrchestratorPayload): Promise<string> {
     console.log(`[BusinessOrchestrator] Routing request for workspace: ${organization.name} through backend API to OpenRouter`);
     
+    let businessData: any = null;
+    if (typeof window !== 'undefined') {
+      const savedDataRaw = localStorage.getItem(`aegis_business_data_${organization.id}`);
+      if (savedDataRaw) {
+        try {
+          businessData = JSON.parse(savedDataRaw);
+        } catch (e) {}
+      }
+    }
+
     try {
-      const result = await ApiClient.sendChatMessage(organization.id, prompt);
+      const result = await ApiClient.sendChatMessage(organization.id, prompt, undefined, businessData);
       if (result && result.response) {
         return result.response;
       }
@@ -22,5 +32,35 @@ export const BusinessOrchestrator = {
     
     // Fallback if backend is unavailable
     return OpenRouterService.ask(prompt, messages);
+  },
+
+  async askWithAgents({ organization, messages, prompt }: OrchestratorPayload): Promise<{ response: string; agents?: any[] }> {
+    console.log(`[BusinessOrchestrator] Routing agent request for workspace: ${organization.name} through backend API to OpenRouter`);
+    
+    let businessData: any = null;
+    if (typeof window !== 'undefined') {
+      const savedDataRaw = localStorage.getItem(`aegis_business_data_${organization.id}`);
+      if (savedDataRaw) {
+        try {
+          businessData = JSON.parse(savedDataRaw);
+        } catch (e) {}
+      }
+    }
+
+    try {
+      const result = await ApiClient.sendChatMessage(organization.id, prompt, undefined, businessData);
+      if (result && result.response) {
+        return {
+          response: result.response,
+          agents: result.rawJson?.agents || []
+        };
+      }
+    } catch (error) {
+      console.warn('[BusinessOrchestrator] Backend chat API failed. Falling back to client-side OpenRouter fallback mode.', error);
+    }
+    
+    // Fallback if backend is unavailable
+    const fallbackText = await OpenRouterService.ask(prompt, messages);
+    return { response: fallbackText };
   }
 };

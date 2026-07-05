@@ -35,6 +35,12 @@ export class AgentExecutionService {
   static async executePlan(organizationId: string, sessionId: string, planAgentNames: string[]): Promise<any> {
     console.log(`[AgentExecutionService] Running plan for session ${sessionId}. Active agents: ${planAgentNames.join(', ')}`);
 
+    // Validate that the provided sessionId exists in the database
+    const session = await SessionRepository.findSessionById(sessionId);
+    if (!session) {
+      throw new Error(`ConversationSession matching ID '${sessionId}' was not found in the database. Cannot execute plan.`);
+    }
+
     // 1. Build initial context
     let context = await KnowledgeService.buildContext(organizationId, sessionId);
 

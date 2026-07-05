@@ -20,6 +20,15 @@ export interface CopilotMessage {
   role: 'user' | 'assistant';
   text: string;
   timestamp: string;
+  agents?: Array<{
+    agent: string;
+    icon: string;
+    role: string;
+    responsibility: string;
+    input: string;
+    output: string;
+    text: string;
+  }>;
 }
 
 type Action =
@@ -265,7 +274,7 @@ export function AegisProvider({ children }: { children: ReactNode }) {
         const delayPromise = new Promise((resolve) => setTimeout(resolve, 15000));
 
         // Call BusinessOrchestrator conversational AI
-        const apiPromise = BusinessOrchestrator.ask({
+        const apiPromise = BusinessOrchestrator.askWithAgents({
           organization: active,
           messages: [
             ...mappedMessages,
@@ -280,11 +289,12 @@ export function AegisProvider({ children }: { children: ReactNode }) {
         });
 
         // Wait for both the API response and the 15-second gimmick timer to resolve
-        const [responseText] = await Promise.all([apiPromise, delayPromise]);
+        const [resObj] = await Promise.all([apiPromise, delayPromise]);
 
         const assistantMsg: CopilotMessage = {
           role: 'assistant',
-          text: responseText,
+          text: resObj.response,
+          agents: resObj.agents,
           timestamp: new Date().toLocaleTimeString('en-US', { hour12: false })
         };
         
